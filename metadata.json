@@ -1,0 +1,6 @@
+{
+  "name": "ClipCat",
+  "description": "Long videos. Short attention. Perfect clips. AI-powered local-first video clipping studio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

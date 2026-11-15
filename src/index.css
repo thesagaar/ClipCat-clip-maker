@@ -1,0 +1,182 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Apple iOS Dynamic Color System (Light + Dark Semantic Tokens) */
+:root {
+  color-scheme: light;
+
+  /* Grouped & Standard Backgrounds (Light) */
+  --ios-bg-primary: #f2f2f7; /* systemGroupedBackground */
+  --ios-bg-secondary: #ffffff; /* secondarySystemGroupedBackground */
+  --ios-bg-tertiary: #e5e5ea; /* systemGray5 / tertiary inset */
+  --ios-bg-elevated: #ffffff; /* elevated modal/popover */
+  --ios-bg-input: #f2f2f7;
+
+  /* Labels (Light) */
+  --ios-label-primary: #1d1d1f;
+  --ios-label-secondary: #515154;
+  --ios-label-tertiary: #6e6e73;
+
+  /* System Grays & Separators (Light) */
+  --ios-separator: #d1d1d6; /* systemGray4 */
+  --ios-separator-strong: #aeaeb2; /* systemGray2 */
+  --ios-gray: #8e8e93;
+  --ios-gray-4: #d1d1d6;
+  --ios-gray-5: #e5e5ea;
+  --ios-gray-6: #f2f2f7;
+
+  /* System Accents & Accessible Tints (Light) */
+  --ios-blue: #0066cc;
+  --ios-blue-fill: #0071e3;
+  --ios-blue-tint: rgba(0, 113, 227, 0.12);
+  --ios-blue-border: rgba(0, 113, 227, 0.35);
+  --ios-indigo: #4b48c4;
+  --ios-purple: #8944ab;
+  --ios-cyan: #0071a4;
+  --ios-green: #1e8e3e;
+  --ios-green-tint: rgba(30, 142, 62, 0.12);
+  --ios-green-border: rgba(30, 142, 62, 0.35);
+  --ios-orange: #b24700;
+  --ios-orange-fill: #ff9f0a;
+  --ios-orange-tint: rgba(255, 149, 0, 0.14);
+  --ios-orange-border: rgba(255, 149, 0, 0.4);
+  --ios-yellow: #996300;
+  --ios-yellow-tint: rgba(255, 204, 0, 0.16);
+  --ios-yellow-border: rgba(180, 130, 0, 0.38);
+  --ios-red: #d70015;
+  --ios-red-tint: rgba(215, 0, 21, 0.1);
+  --ios-red-tint-hover: rgba(215, 0, 21, 0.18);
+  --ios-red-border: rgba(215, 0, 21, 0.35);
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Dynamic & Grouped Backgrounds (Dark) */
+  --ios-bg-primary: #000000; /* systemGroupedBackground */
+  --ios-bg-secondary: #1c1c1e; /* secondarySystemGroupedBackground */
+  --ios-bg-tertiary: #2c2c2e; /* tertiarySystemGroupedBackground */
+  --ios-bg-elevated: #2c2c2e; /* elevatedSystemBackground */
+  --ios-bg-input: #141416;
+
+  /* Labels (Dark) */
+  --ios-label-primary: #ffffff;
+  --ios-label-secondary: #aeaeb2; /* systemGray2 dark */
+  --ios-label-tertiary: #98989d; /* systemGray dark */
+
+  /* System Grays & Separators (Dark) */
+  --ios-separator: #38383a; /* opaqueSeparator dark */
+  --ios-separator-strong: #48484a; /* systemGray3 dark */
+  --ios-gray: #8e8e93;
+  --ios-gray-4: #3a3a3c;
+  --ios-gray-5: #2c2c2e;
+  --ios-gray-6: #1c1c1e;
+
+  /* System Accents & Accessible Tints (Dark) */
+  --ios-blue: #409cff; /* Accessible systemBlue text on dark */
+  --ios-blue-fill: #0071e3; /* Accessible white-text button fill */
+  --ios-blue-tint: rgba(10, 132, 255, 0.18);
+  --ios-blue-border: rgba(10, 132, 255, 0.45);
+  --ios-indigo: #7d7aff;
+  --ios-purple: #da8fff;
+  --ios-cyan: #64d2ff;
+  --ios-green: #30d158;
+  --ios-green-tint: rgba(48, 209, 88, 0.14);
+  --ios-green-border: rgba(48, 209, 88, 0.38);
+  --ios-orange: #ff9f0a;
+  --ios-orange-fill: #ff9f0a;
+  --ios-orange-tint: rgba(255, 159, 10, 0.16);
+  --ios-orange-border: rgba(255, 159, 10, 0.4);
+  --ios-yellow: #ffd60a;
+  --ios-yellow-tint: rgba(255, 214, 10, 0.12);
+  --ios-yellow-border: rgba(255, 214, 10, 0.38);
+  --ios-red: #ff6961;
+  --ios-red-tint: rgba(255, 69, 58, 0.15);
+  --ios-red-tint-hover: rgba(255, 69, 58, 0.25);
+  --ios-red-border: rgba(255, 69, 58, 0.4);
+}
+
+@theme inline {
+  --font-display: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-ios-bg: var(--ios-bg-primary);
+  --color-ios-surface: var(--ios-bg-secondary);
+  --color-ios-tertiary: var(--ios-bg-tertiary);
+  --color-ios-elevated: var(--ios-bg-elevated);
+  --color-ios-input: var(--ios-bg-input);
+  --color-ios-label: var(--ios-label-primary);
+  --color-ios-secondary: var(--ios-label-secondary);
+  --color-ios-tertiary-label: var(--ios-label-tertiary);
+  --color-ios-sep: var(--ios-separator);
+  --color-ios-sep-strong: var(--ios-separator-strong);
+  --color-ios-gray: var(--ios-gray);
+  --color-ios-gray-4: var(--ios-gray-4);
+  --color-ios-blue: var(--ios-blue);
+  --color-ios-blue-fill: var(--ios-blue-fill);
+  --color-ios-indigo: var(--ios-indigo);
+  --color-ios-purple: var(--ios-purple);
+  --color-ios-cyan: var(--ios-cyan);
+  --color-ios-green: var(--ios-green);
+  --color-ios-orange: var(--ios-orange);
+  --color-ios-orange-fill: var(--ios-orange-fill);
+  --color-ios-yellow: var(--ios-yellow);
+  --color-ios-red: var(--ios-red);
+}
+
+@layer base {
+  html {
+    background-color: var(--ios-bg-primary);
+    color: var(--ios-label-primary);
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-family: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Accessible focus ring across all interactive elements */
+  :focus-visible {
+    outline: 2px solid var(--ios-blue);
+    outline-offset: 2px;
+  }
+}
+
+/* Scrollbars matched to iOS system grays */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ios-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ios-separator);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ios-separator-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
