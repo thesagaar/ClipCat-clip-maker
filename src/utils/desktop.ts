@@ -1,3 +1,6 @@
+import { getApiBaseUrl } from '../config/env';
+import { sanitizeDownloadFilename } from './validation';
+
 /**
  * Tauri 2 Desktop Compatibility Adapter
  *
@@ -49,12 +52,39 @@ export async function openOutputFolder(directoryPath: string): Promise<{
   };
 }
 
+export function isAllowedDownloadUrl(rawUrl: string): boolean {
+  try {
+    const base = typeof window !== 'undefined' ? window.location.origin : getApiBaseUrl();
+    const parsed = new URL(rawUrl, base);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false;
+    }
+    if (parsed.username || parsed.password) {
+      return false;
+    }
+    const configuredBackendOrigin = new URL(getApiBaseUrl()).origin;
+    const sameOrigin = typeof window !== 'undefined' && parsed.origin === window.location.origin;
+    return parsed.origin === configuredBackendOrigin || sameOrigin;
+  } catch {
+    return false;
+  }
+}
+
 export async function triggerVerifiedDownload(
   downloadUrl: string,
   filename: string
 ): Promise<{ started: boolean; error?: string }> {
+  if (!isAllowedDownloadUrl(downloadUrl)) {
+    return {
+      started: false,
+      error: 'Download URL rejected because its protocol or origin does not match your configured ClipCat backend.',
+    };
+  }
+
+  const extMatch = /\.([a-zA-Z0-9]+)$/.exec(filename);
+  const safeFilename = sanitizeDownloadFilename(filename, extMatch ? `.${extMatch[1]}` : '.mp4');
+
   try {
-    // Verify file exists and is reachable before claiming download started
     const headResponse = await fetch(downloadUrl, { method: 'HEAD' });
     if (!headResponse.ok) {
       return {
@@ -65,7 +95,7 @@ export async function triggerVerifiedDownload(
 
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = filename;
+    link.download = safeFilename;
     link.rel = 'noopener noreferrer';
     document.body.appendChild(link);
     link.click();

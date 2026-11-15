@@ -1,8 +1,14 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { trackAnalyticsEvent } from './analytics/client';
+import { registerGlobalErrorHandlers } from './analytics/errorAdapter';
+import { ConsentBanner } from './components/legal/ConsentBanner';
+import { RouteMeta } from './components/seo/RouteMeta';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Skeleton } from './components/ui/Skeleton';
 import { AppShell } from './layouts/AppShell';
+import { useUiStore } from './stores/uiStore';
 
 const DashboardPage = lazy(() =>
   import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage }))
@@ -40,6 +46,15 @@ const SettingsPage = lazy(() =>
 const SystemStatusPage = lazy(() =>
   import('./pages/SystemStatusPage').then((m) => ({ default: m.SystemStatusPage }))
 );
+const PrivacyPolicyPage = lazy(() =>
+  import('./pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
+);
+const TermsPage = lazy(() =>
+  import('./pages/TermsPage').then((m) => ({ default: m.TermsPage }))
+);
+const NotFoundPage = lazy(() =>
+  import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage }))
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,28 +79,43 @@ function PageLoadingFallback() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const unregister = registerGlobalErrorHandlers();
+    trackAnalyticsEvent('app_opened', {
+      themeMode: useUiStore.getState().themeMode,
+    });
+    return unregister;
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Suspense fallback={<PageLoadingFallback />}>
-          <Routes>
-            <Route element={<AppShell />}>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/projects/new" element={<NewProjectPage />} />
-              <Route path="/projects" element={<ProjectsPage />} />
-              <Route path="/projects/:id/processing" element={<ProcessingPage />} />
-              <Route path="/projects/:id/clips" element={<ClipDiscoveryPage />} />
-              <Route path="/clips" element={<ClipLibraryPage />} />
-              <Route path="/clips/:id/edit" element={<ClipEditorPage />} />
-              <Route path="/exports" element={<ExportManagerPage />} />
-              <Route path="/presets" element={<CaptionPresetsPage />} />
-              <Route path="/templates" element={<TemplatesPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/system" element={<SystemStatusPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </Suspense>
+        <ErrorBoundary>
+          <RouteMeta />
+          <Suspense fallback={<PageLoadingFallback />}>
+            <Routes>
+              <Route element={<AppShell />}>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/projects/new" element={<NewProjectPage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/projects/:id/processing" element={<ProcessingPage />} />
+                <Route path="/projects/:id/clips" element={<ClipDiscoveryPage />} />
+                <Route path="/clips" element={<ClipLibraryPage />} />
+                <Route path="/clips/:id/edit" element={<ClipEditorPage />} />
+                <Route path="/exports" element={<ExportManagerPage />} />
+                <Route path="/presets" element={<CaptionPresetsPage />} />
+                <Route path="/templates" element={<TemplatesPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/system" element={<SystemStatusPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/404" element={<NotFoundPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
+            </Routes>
+          </Suspense>
+          <ConsentBanner />
+        </ErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>
   );

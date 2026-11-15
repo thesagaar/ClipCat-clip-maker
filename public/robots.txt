@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+
+Disallow: /projects
+Disallow: /projects/
+Disallow: /clips
+Disallow: /clips/
+Disallow: /exports
+Disallow: /presets
+Disallow: /templates
+Disallow: /settings
+Disallow: /system
+Disallow: /api/
+Disallow: /assets/aistudio/

@@ -1,0 +1,120 @@
+CLIPCAT — COMPLETE 19-POINT PRODUCTION READINESS IMPLEMENTATION
+
+Role: Senior Full-Stack Engineer, Application Security Engineer, Performance Engineer and Product Analytics Engineer.
+Project: ClipCat | Parent brand: Single Dimension Projects (SDP)
+Application: Local-first AI Video Clipping Studio
+Current status: Frontend implemented; backend not yet connected.
+
+PRIMARY OBJECTIVE
+Inspect the existing ClipCat repository and implement all 19 requirements below. This is an implementation task, not merely a review. Preserve the approved UI, brand identity, navigation and functionality. Use the existing architecture, reusable components and centralized configuration. Avoid unnecessary dependencies. Test every implemented feature. Document anything blocked by the future backend or deployment environment. Do not rebuild the application, remove existing functionality, create fake integrations, or claim an external service works without verification.
+
+PHASE 0 — REPOSITORY INSPECTION
+1. Inspect the complete project structure.
+2. Identify frontend framework, build tool and package manager.
+3. Inspect routes, layouts, components and navigation.
+4. Inspect brand assets and ClipCat/SDP design system.
+5. Inspect environment variables and API configuration.
+6. Inspect analytics, logging and error handling.
+7. Inspect forms, file-upload interfaces and URL inputs.
+8. Inspect deployment configuration.
+9. Identify tests, scripts and build commands.
+10. Identify backend-dependent features.
+Create a short implementation plan, then proceed. Do not overwrite components without understanding their purpose.
+
+1. PRIVACY POLICY PAGE
+Create a responsive Privacy Policy that accurately explains information processed; local video/audio processing; browser and local storage; product analytics and diagnostics; error/crash reporting; collected events; excluded information; third-party providers if used; cookies and similar technologies if used; retention/deletion; user controls; future backend handling clearly marked as planned; and configured contact details. ClipCat WILL use privacy-conscious analytics. Never claim zero telemetry or analytics. Distinguish product usage analytics, diagnostics, user-generated content and sensitive information. Do not invent legal details, addresses, contacts or certifications.
+
+2. TERMS AND CONDITIONS PAGE
+Cover acceptable use; user responsibility for video ownership and rights; copyright/IP; uploaded or linked content; local processing limitations; availability and technical limitations; export responsibility; third-party services/dependencies; prohibited abuse; appropriate disclaimers/liability limitations; changes; and configured contact information. Do not invent legal entity details. Mark draft legal text as requiring legal review before public commercial release.
+
+3. REMOVE FRONTEND-EXPOSED SECRETS
+Inspect source and production build for API keys, private tokens, passwords, credentials, signing keys, privileged secrets, internal endpoints and sensitive environment variables. Check .env files, VITE_ and equivalent browser-exposed variables, bundled JS, source maps, config and Git ignore rules. Never put private credentials in frontend code; only public config may be exposed. Redact discovered secrets and recommend rotation; never test them against live services.
+
+4. HTTPS CONFIGURATION
+Prepare secure HTTPS deployment. Inspect hosting config, redirects, mixed content, asset loading, API URL and deployment settings. Public production deployments must use HTTPS; redirect HTTP where supported; avoid mixed content and hardcoded HTTP production API endpoints. Keep localhost development working; do not force HTTPS on localhost in a way that breaks it. Document domain/hosting-dependent work.
+
+5. COOKIE CONSENT MANAGEMENT
+Inspect actual cookies, analytics technologies and tracking. Implement accessible consent management where required: explain tracking, distinguish necessary storage from optional analytics, offer appropriate accept/reject/customize controls, do not load optional tracking before required consent, allow preference changes, persist choices appropriately, avoid repeated banners after valid choice, and support accessibility/responsiveness. Do not invent cookie usage. If no cookies requiring consent exist, do not falsely claim they do. Apply relevant requirements; a banner is not a substitute for a privacy policy.
+
+6. META TITLES AND DESCRIPTIONS
+Add unique titles and descriptions for relevant routes, correct language, canonical URLs only when real, Open Graph and Twitter/X metadata, and correct app branding. Do not invent canonical domains. Configure non-indexable routes appropriately.
+
+7. SOCIAL PREVIEW IMAGE
+Prepare a branded ClipCat Open Graph image using official mascot/brand assets. Include ClipCat name, AI video clipping positioning and official purple/lavender identity. Recommended 1200x630. Save in public assets and connect metadata. Do not stretch logos or use unrelated mascots.
+
+8. CUSTOM FAVICON
+Use official ClipCat mascot icon. Prepare suitable favicon formats/sizes and update HTML references, Apple touch icon where applicable, manifest icons where applicable and application branding. Preserve proportions.
+
+9. SITEMAP AND ROBOTS.TXT
+Prepare for public deployment using only real configured production URLs. Do not invent a domain, include private app routes, expose diagnostics/project data/private paths, or index private/local-only content. Configure robots directives and dynamic generation if needed. If domain is unknown, make configuration explicit and document it.
+
+10. IMAGE ALT TEXT
+Audit all images. Add meaningful alt text to mascot, SDP/product logos, informative illustrations and thumbnails where appropriate. Decorative images should use empty alt text where appropriate. Avoid repetitive/meaningless descriptions and sensitive data in alt text.
+
+11. IMAGE COMPRESSION AND OPTIMIZATION
+Optimize mascot, SDP/product logos, icons, illustrations, thumbnails and social preview images. Use WebP/AVIF where supported with suitable fallbacks; avoid oversized assets; specify dimensions to prevent layout shifts; lazy-load offscreen images but not critical above-the-fold branding; preserve quality and logo proportions. Do not apply frontend image optimization to user video content.
+
+12. PAGE-LOAD PERFORMANCE
+Measure and optimize bundle size, JS/CSS, dependencies, rendering, routes, images, thumbnails, large lists, re-renders and video preview memory. Use route lazy loading, code splitting, dynamic imports, lazy thumbnails, efficient state updates, debounced search, justified memoization, efficient lists and object URL cleanup where useful. Use Lighthouse or equivalent if available. Record actual results; do not invent scores. Avoid loading entire original videos into browser memory unnecessarily.
+
+13. COLOR CONTRAST AND ACCESSIBILITY
+Audit text, secondary text, disabled states, buttons, labels, errors, success messages, borders, focus indicators, navigation and icon-only controls. Target WCAG 2.2 AA where applicable. Check keyboard navigation, focus, semantic HTML, labels, screen-reader announcements, modals, expandable sections and touch targets. Preserve ClipCat identity. Do not rely on color alone for status.
+
+14. MOBILE RESPONSIVENESS
+Test 360, 375, 390, 412, 430, 768, 1024, 1280 and 1440 px. Inspect header, sidebar, bottom navigation, dashboard, project creation, upload, processing, clip library, video preview, caption editor, export, settings, footer and modals. Ensure no horizontal overflow, overlapping navigation, clipped text, distorted logos or inaccessible controls; handle safe areas, touch targets, grids and fixed navigation correctly. Preserve approved desktop design; do not merely shrink desktop components.
+
+15. CUSTOM 404 PAGE
+Create responsive branded not-found page with clear message, Dashboard/Home actions where appropriate and accessible navigation. Ensure unknown routes reach it. Do not expose internal paths, stack traces or debug information.
+
+16. BROKEN LINK CHECKING
+Audit sidebar, bottom navigation, footer, privacy, terms, About, help/support, SDP links, project/export navigation and link-like buttons. Every visible action must work; external links must use configured valid destinations; no placeholder href="#" or dead buttons; use correct external-link behaviour and accessible labels. Add automated route/link tests where practical. Do not invent URLs.
+
+17. FORM VALIDATION
+Audit project names, video URLs, file selection, caption settings, templates, application settings, search and support forms if present. Implement required validation, correct types, length limits, whitespace handling, Unicode, clear accessible errors, safe rendering, duplicate-submit prevention, loading/success/error states and consistent rules. For files, use extension/MIME checks only as preliminary UI checks, handle oversize files gracefully, and never treat client checks as server security. Backend must repeat security-critical validation.
+
+18. SPAM AND BOT PROTECTION
+Prepare protection for public forms and future backend endpoints. Frontend: prevent accidental duplicate submissions, clear states and usability throttling; do not rely on hidden fields for security. Backend requirements: rate limiting, request validation, abuse detection, CAPTCHA/challenge only where justified, IP/user limits where applicable, safe errors and monitoring. Do not add intrusive CAPTCHA to ordinary local workflows. Backend enforcement remains pending while no backend is connected.
+
+19. PRODUCT ANALYTICS AND ERROR TRACKING
+IMPORTANT: ClipCat WILL USE ANALYTICS to understand application usage, identify failures, diagnose errors and improve reliability. This is not a zero-analytics product.
+
+A. Analytics objectives: feature and navigation usage; project creation funnel; upload outcomes; processing stage outcomes/failures; backend connection failures; export outcomes; app errors and unhandled exceptions; frontend performance indicators; browser/app version compatibility; error frequency and affected versions.
+
+Example events: app_opened, page_viewed, project_creation_started, project_creation_completed, upload_started, upload_validation_failed, processing_started, processing_stage_completed, processing_failed, export_started, export_completed, export_failed, api_connection_failed, settings_updated, application_error, unhandled_exception. These examples do not authorize arbitrary collection.
+
+B. NEVER collect/transmit: video/audio content, frames/screenshots of user content, transcripts, captions, notes, project names, original filenames, local filesystem paths, full private URLs, API keys, access tokens, passwords, credentials, personal information, sensitive form values, raw request/response bodies, browser storage contents, clipboard contents, keystrokes or session replay recordings by default.
+
+C. Error diagnostics may include sanitized error category/message/stack, app version, browser/OS/platform where appropriate, route identifier without sensitive query parameters, processing stage, timestamp, correlation/event ID and non-sensitive technical metadata. Sanitize query strings, fragments, local paths, filenames, user-entered values, tokens, credentials and exception messages before transmission. Never assume exception messages or stack traces are safe.
+
+D. Architecture: inspect/reuse suitable existing provider if present. Otherwise create provider-independent analytics abstraction, strict event schema, event validation, centralized sanitization, explicit configuration, and keep analytics disabled if no valid provider configuration exists. Document recommended provider/setup. Prefer privacy-conscious free-tier or self-hostable options where practical. Do not introduce paid services without approval or invent keys. Suggested modules: analytics client, event definitions, sanitization, error adapter, consent integration where required and environment configuration.
+
+E. Consent: coordinate with cookie/consent implementation. Do not initialize optional tracking before required consent. Respect choices and applicable requirements. Do not claim cookies are used if provider does not use them. Allow preference revision where applicable.
+
+F. Verify expected events, payload exclusion, URL/error sanitization, no raw video/transcript data, offline resilience, analytics failure not breaking app, duplicate control, no requests when disabled, and correct development/production configuration. Include sample sanitized payloads in docs. No session replay or keystroke/content-level recording.
+
+G. Update privacy statements. Remove inaccurate claim “Zero personal data, telemetry, or analytics collected.” Replace with a truthful explanation of limited usage analytics and sanitized technical diagnostics, excluding user-generated media and sensitive content. Claims must match implementation.
+
+CENTRALIZED CONFIGURATION
+Centralize app name, version, SDP parent brand, tagline, privacy/terms routes, analytics enablement/provider, error monitoring, production API base URL, public website URL, support contact, SEO metadata and social image. Do not duplicate values or invent missing URLs, emails, keys or legal details.
+
+TESTING AND ACCEPTANCE
+Test all 19 requirements. Run production build, type checking, linting, existing tests, route/link checks, form validation, responsive tests, accessibility checks, performance measurements, analytics payload inspection, error sanitization and privacy consistency checks. For each item report: Implemented, Partially implemented, Blocked by missing config/backend/deployment, or Not implemented with reason. Provide actual evidence. A component existing does not prove completion.
+
+REQUIRED DELIVERABLES
+Create:
+1. IMPLEMENTATION_SUMMARY.md
+2. PRIVACY_POLICY.md
+3. TERMS_AND_CONDITIONS.md
+4. SEO_AND_DEPLOYMENT.md
+5. ANALYTICS_AND_ERROR_TRACKING.md
+6. ACCESSIBILITY_REPORT.md
+7. PERFORMANCE_REPORT.md
+8. IMPLEMENTATION_TEST_MATRIX.csv
+9. REMAINING_BACKEND_REQUIREMENTS.md
+10. CHANGELOG.md
+Include exact paths for modified/created files. Include sanitized analytics payload examples and excluded-field list. Document exact deployment configuration still required.
+
+FINAL QUALITY GATE
+Verify all 19 items evaluated; all implementable frontend items implemented; no existing functionality broken; no private secrets introduced; privacy policy accurately describes analytics; analytics excludes sensitive data; diagnostics sanitized; consent matches actual technologies and applicable requirements; private routes not accidentally indexed; mobile/desktop work; links/forms work; production build succeeds; remaining backend/deployment work documented.
+
+Do not give a generic completion message. Provide a numbered report of changes, files, tests and actual results, analytics implementation/privacy safeguards, blocked items and remaining risks. The objective is a genuinely improved ClipCat frontend ready for a separate security audit and secure backend integration.

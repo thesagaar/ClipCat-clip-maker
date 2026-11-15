@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { BRAND } from '../../config/brand';
 import { cn } from '../../utils/cn';
+import { OptimizedImage } from '../ui/OptimizedImage';
 
 interface MascotAssistantProps {
   message: string;
@@ -34,17 +35,19 @@ export function MascotAssistant({
         )}
       >
         {!imgError ? (
-          <img
+          <OptimizedImage
             src={BRAND.assets.clipcatMascot}
-            alt="ClipCat mascot logo"
+            webpSrc={BRAND.assets.clipcatMascotWebp}
+            alt="ClipCat mascot assistant"
             width={64}
             height={46}
+            loading="lazy"
             referrerPolicy="no-referrer"
             onError={() => setImgError(true)}
             className="w-full h-full object-contain"
           />
         ) : (
-          <Sparkles className="w-6 h-6 text-[#7040DC]" />
+          <Sparkles className="w-6 h-6 text-[#7040DC]" aria-hidden="true" />
         )}
       </div>
       <div className="min-w-0">

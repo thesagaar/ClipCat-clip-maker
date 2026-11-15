@@ -1,0 +1,14 @@
+=== TOOL VERSIONS & DATE ===
+2026-11-15T10:05:59Z
+/app/applet
+node: v22.23.2
+npm: 10.9.8
+bun: 1.4.4
+fatal: not a git repository (or any of the parent directories): .git
+git repo: none
+ls: cannot access 'package-lock.json': No such file or directory
+ls: cannot access 'yarn.lock': No such file or directory
+ls: cannot access 'pnpm-lock.yaml': No such file or directory
+ls: cannot access '.env': No such file or directory
+ls: cannot access '.env.local': No such file or directory
+-rw-r--r-- 1 root root 71776 Nov 15 08:43 bun.lock

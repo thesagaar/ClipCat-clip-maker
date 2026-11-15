@@ -1,0 +1,535 @@
+CLIPCAT — PRE-BACKEND FRONTEND SECURITY ASSESSMENT Senior Security
+Analyst / Head of Cybersecurity Engagement Brief Version 1.0 | Scope:
+Existing frontend repository only | Backend: Not connected
+
+====================================================================== 1.
+ROLE AND OBJECTIVE
+======================================================================
+
+Act as a senior application security analyst and Head of Cybersecurity
+conducting a rigorous, evidence-led security assessment of the existing
+ClipCat frontend.
+
+This is a professional security engagement, not a casual code review or
+a scanner-only exercise. Be skeptical. Verify claims. Do not infer that
+a security control exists because a UI element, comment, configuration
+option, or placeholder suggests that it exists.
+
+The frontend currently has NO connected backend. Assess what can
+genuinely be assessed from repository source code, browser runtime,
+build output, dependencies, configuration, and locally reproducible
+frontend behaviour.
+
+Use relevant current guidance as a testing framework: - OWASP Top 10
+(Web Application Security Risks). - OWASP ASVS, where applicable to
+frontend controls. - OWASP Web Security Testing Guide (WSTG). - OWASP
+Cheat Sheet Series. - CWE classifications. - Relevant browser security
+standards and framework-specific guidance.
+
+Do not claim formal compliance or certification. Record the
+versions/dates of guidance used where practical. Do not fabricate
+references.
+
+======================================================================
+2. AUTHORIZATION AND SCOPE
+======================================================================
+
+Authorized scope: - All files in the supplied ClipCat repository. -
+Frontend source, routes, components, forms, state, and UI workflows. -
+Browser storage, API clients, mock services, and integration
+placeholders. - Upload and URL-input interfaces. - Dependency manifests,
+lockfiles, scripts, build configuration, deployment configuration,
+source maps, and static assets. - Local browser testing against this
+frontend and explicitly authorized local fixtures.
+
+Out of scope unless separately authorized: - Attacking third-party
+websites, public infrastructure, or external APIs. - Scanning or
+exploiting systems not owned or explicitly authorized. - Credential
+stuffing, phishing, malware, persistence, destructive payloads,
+denial-of-service, or data exfiltration. - Testing real user accounts or
+real personal data. - Attempting to bypass DRM, authentication, or
+platform restrictions. - Attacking unrelated localhost services.
+
+Safety requirements: 1. Prefer static analysis, safe test payloads,
+local fixtures, and non-destructive dynamic tests. 2. Do not delete user
+data, overwrite original files, or run destructive commands. 3. Do not
+transmit discovered secrets to external services. 4. Inspect unfamiliar
+scripts before executing them. Do not install untrusted packages. 5. Do
+not silently modify source during discovery. Record findings first. Make
+fixes only in a separate remediation phase/branch and preserve the
+original state. 6. Stop before tests that could cause data loss, service
+disruption, unexpected external traffic, or other side effects. 7.
+Redact secret values in all reports. 8. Never describe a frontend-only
+check as server-side enforcement. Client-side controls can be bypassed
+and must be revalidated by the future backend.
+
+======================================================================
+3. REPOSITORY DISCOVERY AND BASELINE
+======================================================================
+
+Inspect the repository before testing. Record: - Repository root,
+assessment date, and commit/version if available. - Framework, language,
+framework version, build tool, and package manager. - Package manifests
+and lockfiles. - Entry points, routes, and navigation. - Components
+handling inputs, files, URLs, previews, captions, exports, settings, and
+project data. - API clients, service layers, mocks, and backend
+placeholders. - Environment variable names and which values are exposed
+to browser code. - Build scripts, deployment configuration, and CI
+workflows. - Authentication/authorization placeholders, if any. -
+Browser storage: localStorage, sessionStorage, IndexedDB, cookies, Cache
+API, service workers. - Third-party scripts, fonts, analytics,
+telemetry, and external asset origins. - Source maps, debug settings,
+tests, linting, and type checking.
+
+Run only safe, understood commands. For each command record the exact
+command, tool/version, working directory, exit code, and relevant
+output.
+
+Establish a baseline: - Dependency-lock consistency. - Production build
+result. - Type-check result. - Lint result, if configured. - Existing
+test suite result. - Browser console errors/warnings. - Network requests
+during normal use. - Whether the app runs without a backend. - Whether
+mock mode is enabled and how it is selected.
+
+A successful build is not evidence that the application is secure.
+
+======================================================================
+4. THREAT MODEL
+======================================================================
+
+Create a ClipCat-specific threat model. Identify:
+
+Assets: - Video files, filenames, project names, transcripts, captions,
+clip metadata, local paths, settings, exports, API configuration,
+tokens, and credentials.
+
+Entry points: - Text inputs, URL inputs, query parameters, route
+parameters, file picker, drag-and-drop, imported metadata, caption
+editors, template editors, and HTML/Markdown rendering.
+
+Trust boundaries: - Browser UI, browser storage, local filesystem
+interfaces, future FastAPI service, future desktop wrapper, and external
+websites/services.
+
+Threat actors: - Maliciously crafted media metadata, malicious URLs,
+untrusted project data, compromised dependencies, local user-space
+processes, and malicious webpages attempting to interact with local
+services.
+
+Mark each data flow as either implemented now or planned for the future.
+Do not imply a future flow already exists.
+
+======================================================================
+5. FRONTEND SECURITY TEST PLAN
+======================================================================
+
+For every test, record: - Test ID and objective. - Exact
+files/components/routes examined. - Method and tool/command used. - Safe
+test input or reproduction steps. - Actual observed result and expected
+secure result. - Status: PASS, FAIL, NOT APPLICABLE, NOT TESTABLE, or
+NOT RUN. - Evidence: file path, line number, console output, screenshot,
+test output, or network observation. - Limitations and confidence.
+
+A. INPUT VALIDATION AND OUTPUT ENCODING - Find every user-controlled
+input and trace where its value is stored, transformed, displayed,
+logged, or passed elsewhere. - Check dangerouslySetInnerHTML, raw
+HTML/Markdown rendering, unsafe template compilation, string-to-DOM
+operations, and unsafe DOM APIs. - Test harmless XSS markers/payloads in
+local UI rendering paths. Do not use destructive or exfiltrating
+payloads. - Check validation of project names, filenames, captions,
+titles, notes, templates, and URLs. - Test empty values, whitespace,
+bounded very long strings, Unicode, control characters, malformed
+encodings, and unexpected types. - Verify invalid values cannot reach
+unsafe rendering sinks. - Check error messages for unsafe rendering of
+untrusted input. - Review regular expressions for catastrophic
+backtracking risk where user-controlled data is involved.
+
+B. XSS AND DOM SECURITY - Search for innerHTML, outerHTML,
+insertAdjacentHTML, document.write, eval, Function constructors, and
+unsafe URL assignment. - Inspect framework escape boundaries, escape
+hatches, and third-party components. - Check DOM-based XSS via query
+parameters, hashes, route values, storage, and imported metadata. -
+Check javascript:, data:, blob:, and unsafe navigation destinations. -
+Check new-tab links and safe rel attributes. - Inspect SVG/HTML handling
+where imported or user-controlled content is involved. - Distinguish
+reachable exploit paths from suspicious patterns.
+
+C. FILE UPLOAD AND MEDIA INPUT UI The backend is absent. Assess frontend
+controls and data handling only; do not claim server-side upload
+security. - Inspect accepted extensions, MIME checks, size limits, and
+validation logic. - Check whether MIME type is incorrectly trusted as
+proof of file type. - Test filename handling, path-like names, Unicode,
+double extensions, unusual characters, and mismatched extension/MIME
+metadata. - Compare drag-and-drop and file picker behaviour. - Check
+multiple-file handling, unexpected file objects, oversized file
+behaviour, and memory pressure. - Inspect object URL creation/revocation
+and preview embedding. - Check rejected-file cleanup and stale state. -
+Identify unsupported security guarantees made by the UI. Recommend
+future backend controls: content/signature validation, safe storage
+names, storage isolation, malware scanning where appropriate, resource
+limits, and safe media processing. Mark these as backend work.
+
+D. URL INPUT AND EXTERNAL NAVIGATION - Inspect URL parsing and
+validation for media links. - Test malformed URLs, unsupported schemes,
+embedded credentials, localhost/private-network addresses, IPv4/IPv6
+variants, unusual ports, and deceptive hostnames using local validation
+only. - Check javascript:, file:, data:, and other dangerous schemes. -
+Inspect external links, redirects, and window.open usage. - Check
+whether previews or fetch behaviour could expose browser data. -
+Identify future backend SSRF risks if a server will fetch URLs. Frontend
+validation does not resolve SSRF. - Do not fetch or attack arbitrary
+targets.
+
+E. CLIENT STORAGE AND PRIVACY - Inventory browser storage and caches. -
+Determine whether transcripts, project metadata, filenames, local paths,
+tokens, or sensitive information are stored. - Check expiry, deletion,
+clear/reset behaviour, stale data, and persistence across
+reloads/tabs. - Check for secrets in localStorage or bundled
+JavaScript. - Inspect URLs, browser history, console logs, errors, and
+analytics for sensitive data. - Verify privacy claims against
+implementation and observed network activity. If the UI claims zero
+personal data, telemetry, or analytics, investigate every code path and
+network request relevant to that claim. - Do not call data private or
+local-only merely because the UI says so.
+
+F. AUTHENTICATION, AUTHORIZATION, AND SESSION PLACEHOLDERS - Determine
+whether authentication exists, is mocked, or is absent. - Inspect route
+guards and role checks. - Identify access decisions made only in the
+frontend. - Check hardcoded demo users, static tokens, default
+credentials, or fake permission logic. - Identify controls that appear
+to protect projects, exports, settings, or diagnostics. - State that
+frontend route guards are not authorization enforcement. - Create
+backend requirements for authentication, authorization, session
+management, CSRF protection where relevant, and ownership checks. - Do
+not invent vulnerabilities for absent features; report missing controls
+as design gaps or not testable.
+
+G. API CLIENT AND FUTURE BACKEND INTEGRATION - Inspect API base URL
+configuration and fallback behaviour. - Check production builds for
+development endpoints. - Check whether secrets or privileged keys are
+exposed through VITE_ or other browser-exposed environment variables. -
+Inspect request construction, headers, credentials mode, errors,
+retries, timeouts, cancellation, and response parsing. - Check
+validation of untrusted API responses. - Check whether errors expose
+stack traces, tokens, paths, or sensitive data. - Inspect unsafe
+assumptions about CORS, authentication, and server-side validation. -
+Ensure mock mode cannot silently masquerade as a secure production
+backend. - Verify safe failure when backend is unavailable. - Identify
+future requirements: server-side authorization, schema validation, rate
+limiting, upload limits, secure CORS, CSRF where relevant, security
+headers, audit logging, and safe errors. - Do not claim CORS, SSRF, SQL
+injection, backend authorization, or server-side upload validation has
+been tested without a backend.
+
+H. DEPENDENCY AND SUPPLY-CHAIN SECURITY - Inventory direct and
+transitive dependencies. - Check package/lockfile consistency. - Run
+available package audit commands and record exact output. - Identify
+abandoned, deprecated, vulnerable, or unnecessary packages. - Inspect
+install scripts and postinstall hooks before executing unfamiliar
+packages. - Check dependency confusion indicators, suspicious package
+names, unpinned dependencies, and unnecessary dependencies. - Review
+build plugins and third-party scripts. - For advisories, record package,
+installed version, advisory/CVE/GHSA, affected range, reachability, and
+confidence. - Do not automatically upgrade packages or use –force during
+assessment. - Distinguish an advisory match from confirmed
+exploitability.
+
+I. SECRETS AND CONFIGURATION - Search source, available repository
+history, environment files, build output, source maps, and configuration
+for API keys, tokens, passwords, private keys, signing material, and
+internal endpoints. - Check .env files and ignore rules. - Check
+committed local configuration and browser-bundled variables. - Inspect
+production debug flags and source-map exposure. - Check default API URLs
+and local-network assumptions. - Redact secret values. If a real
+credential is found, recommend revocation/rotation; do not test it
+against a live service.
+
+J. SECURITY HEADERS AND BROWSER POLICIES Inspect available deployment
+configuration and local response headers for: - Content-Security-Policy
+(CSP). - Strict-Transport-Security (HSTS), where HTTPS applies. -
+X-Content-Type-Options. - Referrer-Policy. - Permissions-Policy. -
+Frame-ancestors/clickjacking protection. - Cross-Origin-Opener-Policy
+and related isolation headers where appropriate. - Cache-Control for
+sensitive content. - MIME types and asset delivery.
+
+If headers depend on hosting or are unavailable in source-only review,
+mark them deployment-dependent or not testable. Recommend a policy
+compatible with actual app needs. Never invent header observations.
+
+K. ROUTING AND CLIENT NAVIGATION - Test unknown routes, malformed
+route/query/hash values, and direct navigation. - Check trust of route
+parameters and open redirects. - Check protected-looking pages
+accessible directly. - Inspect error boundaries and fallbacks. - Check
+sensitive data in paths or query strings.
+
+L. ERRORS, LOGGING, AND INFORMATION DISCLOSURE - Inspect console
+logging, debug panels, notifications, error banners, and diagnostics. -
+Check for stack traces, local paths, environment variables, tokens, and
+untrusted values in logs/errors. - Verify errors do not leave unsafe or
+misleading state. - Test loading, retry, cancellation, and partial
+failures. - Ensure backend-unavailable UI does not claim success.
+
+M. RESOURCE EXHAUSTION AND RESILIENCE - Inspect large input handling,
+repeated actions, expensive state updates, unbounded arrays, and memory
+retention. - Check video preview/object URL lifecycle. - Check repeated
+clicks, duplicate submissions, and cancellation. - Use bounded,
+non-destructive inputs. Do not conduct denial-of-service tests. -
+Identify realistic browser-freeze or memory-exhaustion risks.
+
+N. ACCESSIBILITY AND SECURITY-RELEVANT UX - Check keyboard access to
+security-relevant actions. - Check confirmations for destructive
+actions. - Check understandable errors without leaking secrets. - Check
+whether disabled-looking controls are actually disabled. - Check
+privacy/permission explanations for accuracy. - Report accessibility
+defects separately unless they create concrete security impact.
+
+O. DESKTOP WRAPPER REVIEW, IF PRESENT If Tauri/Electron/native wrapper
+files exist, inspect only what is actually present. For Tauri: inspect
+capability files, permission scopes, command exposure, filesystem/shell
+permissions, custom protocol/deep links, frontend-to-native input
+validation, CSP, remote content, local API binding, and local-service
+authentication/origin validation. For Electron: inspect
+contextIsolation, nodeIntegration, sandbox, preload bridges, navigation
+restrictions, and remote content. Do not claim runtime desktop isolation
+was tested if the app cannot be built/run.
+
+======================================================================
+6. DYNAMIC TESTING
+======================================================================
+
+Run the frontend locally using documented scripts after inspecting them.
+
+Test: - Initial load, refresh, every available route, navigation. - All
+forms and text inputs. - URL input and validation. - File selection and
+drag-and-drop. - Preview and caption UI. - Project creation/deletion UI
+where implemented. - Export UI where implemented. - Settings/reset
+flows. - Empty, loading, error, retry, cancellation, and
+backend-unavailable states. - Responsive layouts and browser
+back/forward behaviour.
+
+Use safe test cases: - Empty values and bounded long strings. - Unicode
+and emoji. - HTML-looking strings that should render as text. -
+Malformed URLs and unsupported schemes. - Fake files with mismatched
+extension/MIME metadata. - Small test files and bounded larger files. -
+Unexpected API response shapes using local mocks only. - Missing API,
+timeout, and network-failure simulation without targeting external
+systems.
+
+A UI accepting an input is not proof that a future backend will process
+it safely.
+
+======================================================================
+7. AUTOMATED CHECKS
+======================================================================
+
+Use tools only after confirming they are appropriate and safe. Potential
+checks: - Package manager audit. - Static analysis and linting. -
+TypeScript type checking. - Secret scanning. - Semgrep or equivalent, if
+available. - Dependency inventory/SBOM, if available. - Browser
+DevTools. - Local-only dynamic tests.
+
+For every tool record name/version, exact command, working directory,
+exit code, output, false positives, and limitations. Never claim a tool
+ran unless it did. Do not upload proprietary source or secrets to
+third-party scanners. Do not add tools/dependencies without approval.
+
+A clean scanner result is not proof of security.
+
+======================================================================
+8. FINDING CLASSIFICATION AND EVIDENCE
+======================================================================
+
+Classify findings: - Critical - High - Medium - Low - Informational
+
+Use CVSS 4.0 only where justified. Include vector and assumptions. Do
+not invent scores.
+
+Separate: 1. Confirmed vulnerability: reproduced or directly evidenced
+weakness with credible attack path. 2. Potential vulnerability:
+suspicious implementation requiring validation. 3. Security design gap:
+required control missing/not implemented. 4. Backend-dependent risk:
+cannot be verified until backend exists. 5. Not applicable. 6. Not
+tested.
+
+Every confirmed finding must include: - Unique ID (CC-FE-001, etc.). -
+Title, severity, rationale, CWE where applicable. - Affected file paths
+and exact line numbers. - Relevant safely redacted code excerpt. -
+Preconditions and attack surface. - Reproduction steps. - Actual and
+expected result. - Security impact and realistic abuse scenario. - Root
+cause and specific remediation. - Regression test and retest status. -
+Evidence references.
+
+Do not label a theoretical issue confirmed without evidence. Do not
+fabricate line numbers, outputs, screenshots, CVEs, or test results.
+
+======================================================================
+9. FILE-LEVEL EVIDENCE REQUIREMENT
+======================================================================
+
+Evidence must allow another engineer to reproduce the conclusion.
+
+For each finding: - Cite repository-relative paths. - Give exact line
+ranges where possible. - Name the
+component/function/hook/route/configuration key. - Include relevant code
+excerpt or test output. - Include commands and actual output for
+automated checks. - Include browser observations/screenshots where
+useful. - State test environment and commit/version where available.
+
+Avoid vague claims such as “input validation is weak” or “the app may
+have XSS.” State exactly what was inspected, what was tested, what
+happened, and what evidence supports the conclusion.
+
+======================================================================
+10. BACKEND-INTEGRATION SECURITY RISK REGISTER
+======================================================================
+
+Because no backend is connected, create a separate prioritized list of
+controls to implement and verify before backend integration and
+production release.
+
+Cover at minimum: - Authentication and session lifecycle. - Server-side
+authorization and project ownership. - Input schemas and validation. -
+File signature/content validation and upload limits. - Safe filenames
+and storage isolation. - Media processing sandboxing and resource
+limits. - URL fetching protections and SSRF prevention. - CORS allowlist
+and origin policy. - CSRF protections where relevant to the
+authentication model. - Rate limiting and abuse controls. - Secrets
+management. - TLS and security headers. - Database access controls and
+parameterized queries. - Safe errors and logging. - Job isolation,
+cancellation, and ownership. - Export/download authorization. - Local
+API binding and protection against hostile websites accessing localhost
+services. - Desktop IPC/filesystem permissions if applicable. -
+Dependency/runtime security. - Backup, deletion, retention, and privacy
+behaviour.
+
+For each item state why it matters, responsible component, test method,
+whether it blocks backend connection/internal testing/public release,
+and evidence required for completion.
+
+Separate controls mandatory before connecting the backend from controls
+mandatory before exposing the app to users or the public internet.
+
+======================================================================
+11. REMEDIATION AND RETEST
+======================================================================
+
+Do not automatically change files during discovery.
+
+For each fix: - Explain root cause. - Propose the smallest safe
+code/configuration change. - Identify regression risks. - Define a
+regression test. - Identify whether it belongs in frontend, backend,
+desktop wrapper, or deployment configuration.
+
+If authorized to implement: 1. Preserve original state or use a separate
+branch. 2. Make minimal targeted changes. 3. Run relevant tests and
+production build. 4. Repeat original reproduction steps. 5. Record
+before/after evidence. 6. Mark fixed only after successful retest. 7.
+Leave unresolved or partially fixed findings open.
+
+======================================================================
+12. REQUIRED DELIVERABLES
+======================================================================
+
+Create a professional assessment package in the repository or a clearly
+identified report directory.
+
+A. EXECUTIVE_SUMMARY.md - Scope, limitations, confirmed findings,
+highest-priority fixes, backend readiness, remaining risks. - No
+unsupported safety/compliance claims.
+
+B. DETAILED_FINDINGS.md - Every finding with file-level evidence,
+reproduction, severity, remediation, and retest status.
+
+C. TEST_REGISTER.md - Every planned test and exact status: PASS, FAIL,
+NOT APPLICABLE, NOT TESTABLE, or NOT RUN. - Commands, results, evidence,
+limitations. - Do not omit failed or blocked tests.
+
+D. BACKEND_SECURITY_REQUIREMENTS.md - Prioritized controls before
+backend integration and production release. - Testable acceptance
+criteria.
+
+E. DEPENDENCY_AND_SECRET_REVIEW.md - Inventory, actual audit results,
+redacted secret scan results, vulnerable/suspicious packages.
+
+F. SECURITY_REMEDIATION_PLAN.md - Ordered fixes, owners/components,
+regression tests, retest status.
+
+G. EVIDENCE/ - Sanitized command outputs, scanner output, screenshots,
+reproduction notes, build/test output, evidence index.
+
+H. SECURITY_TEST_MATRIX.csv Columns: Test ID, Category, Test Name,
+Scope/File, Method, Expected Result, Actual Result, Status, Evidence,
+Limitation, Finding ID.
+
+I. SECURITY_ASSESSMENT_LIMITATIONS.md - Every area that could not be
+tested, why, what access/backend/environment is needed, and remaining
+risk.
+
+If a format cannot be generated in the environment, provide an
+equivalent plain-text/Markdown artifact and state what was not
+generated.
+
+======================================================================
+13. STRICT REPORTING REQUIREMENTS — NON-NEGOTIABLE
+======================================================================
+
+Also, do not accept a report that simply says “No vulnerabilities
+found.”
+
+Demand file-level evidence, actual test results, and a list of
+everything that could not be tested.
+
+The most important deliverable is not a security score. It’s a verified
+list of vulnerabilities, fixes, and remaining risks before the backend
+is connected.
+
+Additionally: - Never claim “fully secure”, “100% secure”, “zero risk”,
+or “production ready” based on frontend-only assessment. - Never treat
+successful build, clean lint, clean dependency audit, or empty scanner
+output as proof of security. - Never invent tests, findings, evidence,
+tool output, or remediation. - Never omit a test because it failed or
+was inconvenient. - Every untested area must appear in the limitations
+register. - Every finding must have a traceable evidence reference. -
+Every fixed finding needs a successful retest. - Label backend-dependent
+risks as unverified. - State exact boundary: frontend only, no connected
+backend. - Even if no confirmed vulnerabilities are found, report tested
+controls, evidence, design gaps, backend risks, and untested areas. - A
+security score is optional secondary context and must never replace
+evidence-led findings and risk register.
+
+======================================================================
+14. FINAL QUALITY GATE
+======================================================================
+
+Before submitting, verify: [ ] Repository/technology inventory is
+accurate. [ ] Scope and authorization boundaries are stated. [ ] Threat
+model reflects actual ClipCat frontend. [ ] Every relevant attack
+surface was inspected or marked untested. [ ] Actual commands and
+outputs are recorded. [ ] Findings include file paths and line-level
+evidence. [ ] Confirmed vulnerabilities are distinguished from
+hypotheses/design gaps. [ ] No backend control is falsely claimed as
+tested. [ ] All untested areas are explicitly listed with reasons. [ ]
+Dependency and secret reviews contain actual results. [ ] Privacy claims
+were checked against code and observed network activity. [ ] Remediation
+is specific and actionable. [ ] Fixes are not marked complete without
+retesting. [ ] Backend requirements are prioritized. [ ] Reports contain
+no exposed secrets. [ ] Final summary does not overstate assurance.
+
+FINAL INSTRUCTION:
+
+Start with repository discovery and threat modeling. Then execute
+applicable frontend security tests. Do not jump straight to a generic
+checklist or one-page security score.
+
+If a tool, dependency, environment, backend, desktop wrapper, or
+permission is unavailable, record the limitation and continue with safe
+tests that can be performed.
+
+Your final response must summarize: 1. What was actually tested. 2.
+Confirmed vulnerabilities, IDs, and severity. 3. Fixes made and
+successfully retested. 4. Remaining security design gaps. 5. What could
+not be tested and why. 6. Backend security requirements before
+integration. 7. Exact paths to all reports and evidence.
+
+Be direct, evidence-driven, and honest. The objective is to reduce real
+risk, not to produce a reassuring report.

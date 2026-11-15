@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { setRuntimeMockMode } from '../api/client';
 import { ENV } from '../config/env';
 import type { NotificationItem } from '../types/system';
+import { normalizeThemePreference, type ThemePreference } from '../utils/theme';
 
 export interface ToastItem {
   id: string;
@@ -11,7 +12,7 @@ export interface ToastItem {
   variant: 'info' | 'success' | 'warning' | 'error';
 }
 
-export type ThemePreference = 'dark' | 'light' | 'system';
+export type { ThemePreference };
 
 interface UiState {
   sidebarCollapsed: boolean;
@@ -42,7 +43,8 @@ export const useUiStore = create<UiState>()(
       projectViewMode: 'grid',
       mockModeEnabled:
         ENV.USE_MOCK_API ||
-        (typeof window !== 'undefined' &&
+        (ENV.IS_DEV &&
+          typeof window !== 'undefined' &&
           new URLSearchParams(window.location.search).get('mock') === '1'),
       themeMode: 'dark',
       toasts: [],
@@ -62,7 +64,8 @@ export const useUiStore = create<UiState>()(
         set({ mockModeEnabled: enabled });
       },
 
-      setThemeMode: (themeMode) => set({ themeMode }),
+      setThemeMode: (themeMode) =>
+        set({ themeMode: normalizeThemePreference(themeMode) }),
 
       addToast: (toast) => {
         const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -106,8 +109,16 @@ export const useUiStore = create<UiState>()(
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
         projectViewMode: state.projectViewMode,
-        themeMode: state.themeMode,
+        themeMode: normalizeThemePreference(state.themeMode),
       }),
+      merge: (persistedState, currentState) => {
+        const persisted = (persistedState as Partial<UiState> | undefined) ?? {};
+        return {
+          ...currentState,
+          ...persisted,
+          themeMode: normalizeThemePreference(persisted.themeMode),
+        };
+      },
     }
   )
 );

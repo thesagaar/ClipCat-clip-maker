@@ -16,6 +16,7 @@ import { SdpLogo } from '../components/brand/SdpLogo';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { OptimizedImage } from '../components/ui/OptimizedImage';
 import { Skeleton } from '../components/ui/Skeleton';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
 import { BRAND } from '../config/brand';
@@ -88,11 +89,13 @@ export function DashboardPage() {
         <div className="space-y-3 max-w-2xl min-w-0">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden animate-float-gentle">
-              <img
+              <OptimizedImage
                 src={BRAND.assets.clipcatLogo}
+                webpSrc={BRAND.assets.clipcatLogoWebp}
                 alt="ClipCat mascot logo"
                 width={64}
                 height={64}
+                loading="eager"
                 className="w-full h-full object-contain"
               />
             </div>

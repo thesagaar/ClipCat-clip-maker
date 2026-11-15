@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Scissors } from 'lucide-react';
 import { BRAND } from '../../config/brand';
 import { cn } from '../../utils/cn';
+import { OptimizedImage } from '../ui/OptimizedImage';
 
 interface ClipCatLogoProps {
   collapsed?: boolean;
@@ -42,6 +43,12 @@ export function ClipCatLogo({
       ? BRAND.assets.clipcatLogo
       : BRAND.assets.clipcatLogoSmall;
 
+  const webpSrc = useMascotOnly
+    ? BRAND.assets.clipcatIconWebp
+    : size === 'lg'
+      ? BRAND.assets.clipcatLogoWebp
+      : BRAND.assets.clipcatLogoSmallWebp;
+
   return (
     <div className={cn('flex items-center gap-2.5 min-w-0', className)}>
       {!imgError ? (
@@ -51,11 +58,13 @@ export function ClipCatLogo({
             cls
           )}
         >
-          <img
+          <OptimizedImage
             src={imageSrc}
+            webpSrc={webpSrc}
             alt="ClipCat mascot logo"
             width={px}
             height={px}
+            loading="eager"
             referrerPolicy="no-referrer"
             onError={() => setImgError(true)}
             className="w-full h-full object-contain"
@@ -68,7 +77,7 @@ export function ClipCatLogo({
             cls
           )}
         >
-          <Scissors className="w-4 h-4" />
+          <Scissors className="w-4 h-4" aria-hidden="true" />
         </div>
       )}
       {!collapsed && (
@@ -86,7 +95,7 @@ export function ClipCatLogo({
             {BRAND.productName}
           </span>
           {showSubtitle && (
-            <span className="text-[11px] font-medium text-ios-secondary whitespace-nowrap leading-tight mt-0.5">
+            <span className="text-[11px] font-medium text-ios-secondary whitespace-normal leading-snug mt-0.5">
               {showSdpAttribution ? BRAND.shortAttribution : BRAND.productCategory}
             </span>
           )}

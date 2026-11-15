@@ -1,0 +1,149 @@
+=== ALL UNIT TESTS (src/**/*.test.ts) ===
+src/api/client.test.ts
+src/utils/filters.test.ts
+src/utils/format.test.ts
+src/utils/gestures.test.ts
+src/utils/validation.test.ts
+TAP version 13
+# Subtest: buildApiUrl joins configured base URL and normalized paths
+ok 1 - buildApiUrl joins configured base URL and normalized paths
+  ---
+  duration_ms: 1.331338
+  type: 'test'
+  ...
+# Subtest: extractErrorMessage parses FastAPI string and Pydantic validation detail arrays
+ok 2 - extractErrorMessage parses FastAPI string and Pydantic validation detail arrays
+  ---
+  duration_ms: 0.386349
+  type: 'test'
+  ...
+# Subtest: normalizeUnknownError identifies offline TypeError as BACKEND_UNAVAILABLE
+ok 3 - normalizeUnknownError identifies offline TypeError as BACKEND_UNAVAILABLE
+  ---
+  duration_ms: 1.052027
+  type: 'test'
+  ...
+# Subtest: mock mode defaults to false and can be toggled explicitly in runtime
+ok 4 - mock mode defaults to false and can be toggled explicitly in runtime
+  ---
+  duration_ms: 0.393343
+  type: 'test'
+  ...
+# Subtest: pingBackendServer reports reachable and unreachable FastAPI responses accurately
+ok 5 - pingBackendServer reports reachable and unreachable FastAPI responses accurately
+  ---
+  duration_ms: 63.441997
+  type: 'test'
+  ...
+# Subtest: filterAndSortProjects filters by query and status and sorts accurately
+ok 6 - filterAndSortProjects filters by query and status and sorts accurately
+  ---
+  duration_ms: 1.224831
+  type: 'test'
+  ...
+# Subtest: filterAndSortClips and calculateClipSummary handle scoring and duration sorts
+ok 7 - filterAndSortClips and calculateClipSummary handle scoring and duration sorts
+  ---
+  duration_ms: 0.496764
+  type: 'test'
+  ...
+# Subtest: formatDuration formats seconds, minutes, and hours consistently
+ok 8 - formatDuration formats seconds, minutes, and hours consistently
+  ---
+  duration_ms: 1.877586
+  type: 'test'
+  ...
+# Subtest: formatPreciseTimestamp formats tenths of a second cleanly
+ok 9 - formatPreciseTimestamp formats tenths of a second cleanly
+  ---
+  duration_ms: 0.428017
+  type: 'test'
+  ...
+# Subtest: formatBytes formats storage values with appropriate units
+ok 10 - formatBytes formats storage values with appropriate units
+  ---
+  duration_ms: 0.640113
+  type: 'test'
+  ...
+# Subtest: formatElapsedVerbose formats human-readable elapsed seconds
+ok 11 - formatElapsedVerbose formats human-readable elapsed seconds
+  ---
+  duration_ms: 0.570106
+  type: 'test'
+  ...
+# Subtest: MOBILE_SWIPE_ROUTES matches the five primary mobile navigation routes in order
+ok 12 - MOBILE_SWIPE_ROUTES matches the five primary mobile navigation routes in order
+  ---
+  duration_ms: 4.012654
+  type: 'test'
+  ...
+# Subtest: resolveSwipeTargetRoute advances forward on left swipe and backward on right swipe
+ok 13 - resolveSwipeTargetRoute advances forward on left swipe and backward on right swipe
+  ---
+  duration_ms: 0.325839
+  type: 'test'
+  ...
+# Subtest: resolveSwipeTargetRoute supports high-velocity short flicks and library swipe state
+ok 14 - resolveSwipeTargetRoute supports high-velocity short flicks and library swipe state
+  ---
+  duration_ms: 0.294841
+  type: 'test'
+  ...
+# Subtest: resolveSwipeTargetRoute respects boundaries and non-primary subroutes
+ok 15 - resolveSwipeTargetRoute respects boundaries and non-primary subroutes
+  ---
+  duration_ms: 0.217242
+  type: 'test'
+  ...
+# Subtest: resolveSwipeTargetRoute ignores desktop widths, diagonal/vertical scrolls, and interactive controls
+ok 16 - resolveSwipeTargetRoute ignores desktop widths, diagonal/vertical scrolls, and interactive controls
+  ---
+  duration_ms: 0.275387
+  type: 'test'
+  ...
+# Subtest: computeDragPreviewOffset damps and applies rubber-band resistance at boundaries
+ok 17 - computeDragPreviewOffset damps and applies rubber-band resistance at boundaries
+  ---
+  duration_ms: 0.327825
+  type: 'test'
+  ...
+# Subtest: computePullOffset and shouldTriggerPullRefresh clamp safely
+ok 18 - computePullOffset and shouldTriggerPullRefresh clamp safely
+  ---
+  duration_ms: 0.331164
+  type: 'test'
+  ...
+# Subtest: validateVideoFileInput accepts supported video formats and rejects invalid ones
+ok 19 - validateVideoFileInput accepts supported video formats and rejects invalid ones
+  ---
+  duration_ms: 1.439869
+  type: 'test'
+  ...
+# Subtest: classifyAndValidateVideoUrl detects direct MP4, YouTube restrictions, and invalid URLs
+ok 20 - classifyAndValidateVideoUrl detects direct MP4, YouTube restrictions, and invalid URLs
+  ---
+  duration_ms: 0.482593
+  type: 'test'
+  ...
+# Subtest: validateProcessingConfig catches missing project name and invalid duration ranges
+ok 21 - validateProcessingConfig catches missing project name and invalid duration ranges
+  ---
+  duration_ms: 1.743282
+  type: 'test'
+  ...
+# Subtest: validateClipTrimRange enforces valid positive bounds and minimum clip length
+ok 22 - validateClipTrimRange enforces valid positive bounds and minimum clip length
+  ---
+  duration_ms: 0.334231
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 548.535022
+EXIT_CODE=0

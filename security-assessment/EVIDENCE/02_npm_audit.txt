@@ -1,0 +1,20 @@
+=== COMMAND: npm audit --json ===
+npm error code ENOLOCK
+npm error audit This command requires an existing lockfile.
+npm error audit Try creating one first with: npm i --package-lock-only
+npm error audit Original error: loadVirtual requires existing shrinkwrap file
+{
+  "error": {
+    "code": "ENOLOCK",
+    "summary": "This command requires an existing lockfile.",
+    "detail": "Try creating one first with: npm i --package-lock-only\nOriginal error: loadVirtual requires existing shrinkwrap file"
+  }
+}
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-11-15T10_06_14_337Z-debug-0.log
+EXIT_CODE=1
+
+=== COMMAND: bun pm ls / bun audit check ===
+bun audit v1.4.4 (38afee6c8)
+
+No vulnerabilities found (checked 268 packages) [215.00ms]
+BUN_AUDIT_EXIT=0

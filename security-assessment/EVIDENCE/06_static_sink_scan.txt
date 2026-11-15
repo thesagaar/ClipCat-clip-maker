@@ -1,0 +1,39 @@
+=== 1. DANGEROUS DOM / CODE EXECUTION SINKS ===
+NO_MATCHES
+
+=== 2. DANGEROUS URL SCHEMES & EXTERNAL LINKS ===
+src/utils/validation.ts:13:export function validateVideoFileInput(file: {
+src/api/projects.ts:69:  file: File;
+src/stores/projectDraftStore.ts:14:  fileMetadata: SourceVideoMetadata | null;
+src/stores/projectDraftStore.ts:19:  setSelectedFile: (file: File | null, metadata?: SourceVideoMetadata | null, objectUrl?: string | null) => void;
+src/stores/projectDraftStore.ts:20:  setFileMetadata: (metadata: SourceVideoMetadata | null) => void;
+src/stores/projectDraftStore.ts:38:  fileMetadata: null,
+src/stores/projectDraftStore.ts:57:      fileMetadata: metadata,
+src/stores/projectDraftStore.ts:65:  setFileMetadata: (metadata) => set({ fileMetadata: metadata }),
+src/stores/projectDraftStore.ts:100:      fileMetadata: null,
+src/components/layout/Footer.tsx:45:        target="_blank"
+src/components/layout/Footer.tsx:46:        rel="noopener noreferrer"
+src/pages/NewProjectPage.tsx:71:  const handleFileSelection = (file: File | null) => {
+src/pages/NewProjectPage.tsx:186:          file: selectedFile,
+src/pages/SettingsPage.tsx:681:                target="_blank"
+src/pages/SettingsPage.tsx:682:                rel="noopener noreferrer"
+src/pages/SettingsPage.tsx:694:                target="_blank"
+src/pages/SettingsPage.tsx:695:                rel="noopener noreferrer"
+index.html:12:    <link rel="icon" type="image/png" href="/brand/clipcat-favicon.png" />
+index.html:13:    <link rel="apple-touch-icon" href="/brand/clipcat-icon.png" />
+index.html:14:    <link rel="alternate icon" href="/brand/favicon.ico" />
+index.html:15:    <link rel="preconnect" href="https://fonts.googleapis.com" />
+index.html:16:    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+index.html:19:      rel="stylesheet"
+
+=== 3. BROWSER STORAGE & STATE PERSISTENCE ===
+src/config/env.ts:27:      const override = normalizeBaseUrl(window.localStorage.getItem(API_BASE_STORAGE_KEY));
+src/config/env.ts:43:        window.localStorage.removeItem(API_BASE_STORAGE_KEY);
+src/config/env.ts:45:        window.localStorage.setItem(API_BASE_STORAGE_KEY, normalized);
+src/stores/uiStore.ts:38:  persist(
+
+=== 4. UNUSED / SENSITIVE PACKAGE IMPORTS ===
+NO_MATCHES
+
+=== 5. ERROR BOUNDARIES / COMPONENTDIDICATCH ===
+NO_MATCHES

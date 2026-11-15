@@ -20,10 +20,12 @@ import {
   Settings,
   X,
 } from 'lucide-react';
+import { BrandHeader } from '../components/brand/BrandHeader';
 import { ClipCatLogo } from '../components/brand/ClipCatLogo';
 import { SdpLogo } from '../components/brand/SdpLogo';
 import { Footer } from '../components/layout/Footer';
 import { MobileBottomNav } from '../components/navigation/MobileBottomNav';
+import { resolveRouteMeta } from '../components/seo/routesMetaConfig';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
 import { ToastContainer } from '../components/ui/ToastContainer';
 import { BRAND } from '../config/brand';
@@ -64,92 +66,8 @@ function getPageHeaderMeta(pathname: string): {
   title: string;
   breadcrumbs: Array<{ label: string; to?: string }>;
 } {
-  if (pathname === '/') {
-    return { title: 'Dashboard', breadcrumbs: [{ label: 'Workspace' }, { label: 'Dashboard' }] };
-  }
-  if (pathname === '/projects/new') {
-    return {
-      title: 'New Project',
-      breadcrumbs: [
-        { label: 'Workspace', to: '/' },
-        { label: 'Projects', to: '/projects' },
-        { label: 'New Project' },
-      ],
-    };
-  }
-  if (pathname === '/projects') {
-    return {
-      title: 'Projects',
-      breadcrumbs: [{ label: 'Workspace', to: '/' }, { label: 'Projects' }],
-    };
-  }
-  if (pathname.includes('/processing')) {
-    return {
-      title: 'AI Processing',
-      breadcrumbs: [
-        { label: 'Workspace', to: '/' },
-        { label: 'Projects', to: '/projects' },
-        { label: 'Processing' },
-      ],
-    };
-  }
-  if (pathname.startsWith('/projects/') && pathname.endsWith('/clips')) {
-    return {
-      title: 'Clip Discovery',
-      breadcrumbs: [
-        { label: 'Workspace', to: '/' },
-        { label: 'Projects', to: '/projects' },
-        { label: 'Generated Clips' },
-      ],
-    };
-  }
-  if (pathname === '/clips') {
-    return {
-      title: 'Clip Library',
-      breadcrumbs: [{ label: 'Workspace', to: '/' }, { label: 'Clip Library' }],
-    };
-  }
-  if (pathname.startsWith('/clips/') && pathname.endsWith('/edit')) {
-    return {
-      title: 'Clip Editor',
-      breadcrumbs: [
-        { label: 'Workspace', to: '/' },
-        { label: 'Clip Library', to: '/clips' },
-        { label: 'Editor' },
-      ],
-    };
-  }
-  if (pathname === '/exports') {
-    return {
-      title: 'Export Manager',
-      breadcrumbs: [{ label: 'Workspace', to: '/' }, { label: 'Exports' }],
-    };
-  }
-  if (pathname === '/presets') {
-    return {
-      title: 'Caption Presets',
-      breadcrumbs: [{ label: 'Creative' }, { label: 'Caption Presets' }],
-    };
-  }
-  if (pathname === '/templates') {
-    return {
-      title: 'Workflow Templates',
-      breadcrumbs: [{ label: 'Creative' }, { label: 'Templates' }],
-    };
-  }
-  if (pathname === '/settings') {
-    return {
-      title: 'Settings',
-      breadcrumbs: [{ label: 'System' }, { label: 'Settings' }],
-    };
-  }
-  if (pathname === '/system') {
-    return {
-      title: 'System Status',
-      breadcrumbs: [{ label: 'System' }, { label: 'System Status' }],
-    };
-  }
-  return { title: 'ClipCat', breadcrumbs: [{ label: 'Studio' }] };
+  const meta = resolveRouteMeta(pathname);
+  return { title: meta.headerTitle, breadcrumbs: meta.breadcrumbs };
 }
 
 export function AppShell() {
@@ -174,22 +92,7 @@ export function AppShell() {
 
   useEffect(() => {
     const root = document.documentElement;
-    const applyTheme = (isDark: boolean) => {
-      root.classList.toggle('dark', isDark);
-    };
-    if (themeMode === 'dark') {
-      applyTheme(true);
-      return;
-    }
-    if (themeMode === 'light') {
-      applyTheme(false);
-      return;
-    }
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    applyTheme(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => applyTheme(e.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
+    root.classList.toggle('dark', themeMode !== 'light');
   }, [themeMode]);
 
   useEffect(() => {
@@ -211,10 +114,6 @@ export function AppShell() {
   const pageMeta = getPageHeaderMeta(location.pathname);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const activeJobsCount = healthQuery.data?.activeJobsCount ?? 0;
-
-  useEffect(() => {
-    document.title = `${pageMeta.title} — ClipCat`;
-  }, [pageMeta.title]);
 
   const renderNavSection = (heading: string, items: NavItem[], inDrawer = false) => (
     <div className="space-y-1">
@@ -261,6 +160,12 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-ios-bg text-ios-label flex overflow-x-hidden">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#7040DC] focus:text-white focus:text-sm focus:font-semibold focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
       {/* Responsive Desktop & Tablet Sidebar (hidden below 640px) */}
       <aside
         aria-label="Primary navigation"
@@ -366,18 +271,22 @@ export function AppShell() {
             aria-label="Mobile navigation"
             className="relative z-10 w-64 max-w-[85vw] bg-ios-surface border-r border-ios-sep flex flex-col h-full"
           >
-            <div className="h-16 flex items-center justify-between px-4 border-b border-ios-sep">
-              <Link to="/" aria-label="ClipCat Home" className="min-w-0 flex items-center">
-                <ClipCatLogo showSubtitle showSdpAttribution />
-              </Link>
-              <button
-                type="button"
-                onClick={() => setMobileNavOpen(false)}
-                aria-label="Close navigation menu"
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+            <div className="px-4 py-3.5 border-b border-ios-sep">
+              <BrandHeader
+                size="sm"
+                onNavigate={() => setMobileNavOpen(false)}
+                attributionClassName="text-xs"
+                trailingAction={
+                  <button
+                    type="button"
+                    onClick={() => setMobileNavOpen(false)}
+                    aria-label="Close navigation menu"
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary cursor-pointer shrink-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                }
+              />
             </div>
             <nav className="flex-1 overflow-y-auto px-3 py-5 space-y-6">
               {renderNavSection('WORKSPACE', workspaceNav, true)}
@@ -579,13 +488,15 @@ export function AppShell() {
           className={cn('flex-1 flex flex-col min-w-0', canSwipe && 'touch-pan-y')}
         >
           <motion.main
+            id="main-content"
+            tabIndex={-1}
             animate={dragOffsetX !== 0 ? { x: dragOffsetX } : { x: 0 }}
             transition={
               isSwiping
                 ? { duration: 0 }
                 : { type: 'spring', stiffness: 420, damping: 36, mass: 0.6 }
             }
-            className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] w-full mx-auto min-w-0"
+            className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] w-full mx-auto min-w-0 focus:outline-none"
           >
             <Outlet />
           </motion.main>

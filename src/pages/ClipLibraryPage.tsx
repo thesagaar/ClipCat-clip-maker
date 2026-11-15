@@ -15,6 +15,7 @@ import {
   useDeleteClipMutation,
   useRenderClipMutation,
 } from '../hooks/useClipCatQueries';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useUiStore } from '../stores/uiStore';
 import type { Clip } from '../types/clip';
 import { triggerVerifiedDownload } from '../utils/desktop';
@@ -31,6 +32,7 @@ export function ClipLibraryPage() {
   const { addToast } = useUiStore();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebouncedValue(searchQuery, 200);
   const [statusFilter, setStatusFilter] = useState<ClipFilterOption>('all');
   const [sortBy, setSortBy] = useState<ClipSortOption>('highest_score');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -42,11 +44,11 @@ export function ClipLibraryPage() {
   const filteredClips = useMemo(
     () =>
       filterAndSortClips(clips, {
-        searchQuery,
+        searchQuery: debouncedSearch,
         statusFilter,
         sortBy,
       }),
-    [clips, searchQuery, statusFilter, sortBy]
+    [clips, debouncedSearch, statusFilter, sortBy]
   );
 
   const toggleSelect = (clipId: string) => {

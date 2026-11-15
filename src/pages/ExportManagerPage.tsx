@@ -8,6 +8,7 @@ import {
   FolderOpen,
   Image as ImageIcon,
 } from 'lucide-react';
+import { trackAnalyticsEvent } from '../analytics/client';
 import { batchExportClips, buildApiUrl, getClipDownloadUrl } from '../api';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -53,14 +54,24 @@ export function ExportManagerPage() {
       return;
     }
     const fullUrl = url.startsWith('http') ? url : buildApiUrl(url);
+    const fmt = label.toLowerCase().includes('srt')
+      ? 'srt'
+      : label.toLowerCase().includes('vtt')
+        ? 'vtt'
+        : label.toLowerCase().includes('json')
+          ? 'json'
+          : 'mp4';
+    trackAnalyticsEvent('export_started', { exportFormat: fmt, clipCount: 1 });
     const res = await triggerVerifiedDownload(fullUrl, filename);
     if (!res.started) {
+      trackAnalyticsEvent('export_failed', { exportFormat: fmt, errorCategory: 'download_failed' });
       addToast({
         variant: 'error',
         title: `${label} Download Failed`,
         description: res.error,
       });
     } else {
+      trackAnalyticsEvent('export_completed', { exportFormat: fmt, clipCount: 1 });
       addToast({
         variant: 'success',
         title: `${label} Download Started`,
@@ -70,15 +81,21 @@ export function ExportManagerPage() {
   };
 
   const handleDownloadAll = async () => {
-    if (clips.length === 0) return;
+    if (clips.length === 0 || exportingAll) return;
     setExportingAll(true);
+    trackAnalyticsEvent('export_started', { exportFormat: 'zip', clipCount: clips.length });
     try {
       const resp = await batchExportClips({
         clipIds: clips.map((c) => c.id),
         formats: ['mp4', 'srt', 'vtt', 'json'],
       });
       if (resp.archiveUrl) {
-        await triggerVerifiedDownload(resp.archiveUrl, 'clipcat_all_exports.zip');
+        const res = await triggerVerifiedDownload(resp.archiveUrl, 'clipcat_all_exports.zip');
+        if (res.started) {
+          trackAnalyticsEvent('export_completed', { exportFormat: 'zip', clipCount: clips.length });
+        } else {
+          trackAnalyticsEvent('export_failed', { exportFormat: 'zip', errorCategory: 'download_failed' });
+        }
       } else {
         addToast({
           variant: 'info',
@@ -87,6 +104,7 @@ export function ExportManagerPage() {
         });
       }
     } catch (err) {
+      trackAnalyticsEvent('export_failed', { exportFormat: 'zip', errorCategory: 'batch_api_error' });
       addToast({
         variant: 'error',
         title: 'Batch Export Failed',

@@ -26,11 +26,13 @@ import {
   useProjectsQuery,
   useRenameProjectMutation,
 } from '../hooks/useClipCatQueries';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useUiStore } from '../stores/uiStore';
 import type { Project, ProjectStatus } from '../types/project';
 import { triggerVerifiedDownload } from '../utils/desktop';
 import { filterAndSortProjects, type ProjectSortOption } from '../utils/filters';
 import { formatDateShort, formatDuration } from '../utils/format';
+import { validateProjectNameValue } from '../utils/validation';
 
 export function ProjectsPage() {
   const projectsQuery = useProjectsQuery();
@@ -39,31 +41,40 @@ export function ProjectsPage() {
   const { projectViewMode, setProjectViewMode, addToast } = useUiStore();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebouncedValue(searchQuery, 200);
   const [statusFilter, setStatusFilter] = useState<'all' | ProjectStatus>('all');
   const [sortBy, setSortBy] = useState<ProjectSortOption>('newest');
 
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [renameError, setRenameError] = useState<string | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   const projects = projectsQuery.data ?? [];
   const filteredProjects = useMemo(
     () =>
       filterAndSortProjects(projects, {
-        searchQuery,
+        searchQuery: debouncedSearch,
         statusFilter,
         sortBy,
       }),
-    [projects, searchQuery, statusFilter, sortBy]
+    [projects, debouncedSearch, statusFilter, sortBy]
   );
 
   const handleOpenRename = (project: Project) => {
     setProjectToRename(project);
     setRenameValue(project.name);
+    setRenameError(null);
   };
 
   const handleSaveRename = async () => {
-    if (!projectToRename || !renameValue.trim()) return;
+    if (!projectToRename || renameMutation.isPending) return;
+    const errMsg = validateProjectNameValue(renameValue);
+    if (errMsg) {
+      setRenameError(errMsg);
+      return;
+    }
+    setRenameError(null);
     try {
       await renameMutation.mutateAsync({
         projectId: projectToRename.id,
@@ -437,8 +448,13 @@ export function ProjectsPage() {
       >
         <Input
           label="Project Name"
+          maxLength={120}
+          error={renameError ?? undefined}
           value={renameValue}
-          onChange={(e) => setRenameValue(e.target.value)}
+          onChange={(e) => {
+            setRenameValue(e.target.value);
+            if (renameError) setRenameError(null);
+          }}
         />
       </Modal>
 

@@ -1,0 +1,134 @@
+### Result
+{"externalResourcesOnLoad":[{"name":"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap","initiatorType":"link"},{"name":"http://127.0.0.1:8000/api/projects","initiatorType":"fetch"},{"name":"http://127.0.0.1:8000/api/clips","initiatorType":"fetch"},{"name":"http://127.0.0.1:8000/api/system/storage","initiatorType":"fetch"},{"name":"http://127.0.0.1:8000/api/system/health","initiatorType":"fetch"},{"name":"http://127.0.0.1:8000/api/projects","initiatorType":"fetch"},{"name":"http://127.0.0.1:8000/api/clips","initiatorType":"fetch"}],"indexedDB":[],"cacheStorage":[],"urlValidationResults":[{"input":"javascript:alert(1)","statusText":"Only HTTP and HTTPS media URLs are supported. Switch to Local Upload Instead","startClippingDisabled":true},{"input":"data:text/html,<b>hi</b>","statusText":"Only HTTP and HTTPS media URLs are supported. Switch to Local Upload Instead","startClippingDisabled":true},{"input":"file:///etc/passwd","statusText":"Only HTTP and HTTPS media URLs are supported. Switch to Local Upload Instead","startClippingDisabled":true},{"input":"http://169.254.169.254/latest/meta-data/clip.mp4","statusText":"Direct MP4 media URL detected and ready for backend retrieval. Source host: 169.254.169.254 · clip.mp4","startClippingDisabled":false},{"input":"http://admin:secret@127.0.0.1:8000/video.mp4","statusText":"Direct MP4 media URL detected and ready for backend retrieval. Source host: 127.0.0.1 · video.mp4","startClippingDisabled":false},{"input":"http://[::1]:8000/clip.mp4","statusText":"Direct MP4 media URL detected and ready for backend retrieval. Source host: [::1] · clip.mp4","startClippingDisabled":false},{"input":"http://localhost:3000/video.mp4","statusText":"Direct MP4 media URL detected and ready for backend retrieval. Source host: localhost · video.mp4","startClippingDisabled":false},{"input":"https://example.com/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...(len=2072)","statusText":"Direct MP4 media URL detected and ready for backend retrieval. Source host: example.com · aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.mp4","startClippingDisabled":false}],"fakeMp4HtmlUploadResult":{"bodyHasValidFormat":true,"videoSrc":"blob:http://localhost:3000/34e44c1b-56f2-4a9b-9867-7f9f969206a5","xssFlag":null},"afterRemoveCleanup":{"hasBrowseFiles":true,"videoElementCount":0},"badExtensionRejection":["Unsupported file extension. Supported formats: MP4, MOV, MKV, WEBM."],"projectsXssTest":{"xssExecuted":null,"renderedLiteralPayload":true},"editorXssTest":{"xssExecuted":null,"hasSavedLabel":true},"localStorageBackendOverride":"http://10.0.0.99:9000/untrusted","dialogClosedOnEsc":true}
+### Ran Playwright code
+```js
+await (async (page) => {
+    await page.waitForTimeout(800);
+    const resources = await page.evaluate(() =>
+      performance.getEntriesByType("resource").map(r => ({
+        name: r.name,
+        initiatorType: r.initiatorType
+      })).filter(r => !r.name.startsWith("http://localhost:3000"))
+    );
+    const idb = await page.evaluate(async () => {
+      if (!indexedDB.databases) return "unsupported";
+      return await indexedDB.databases();
+    });
+    const cachesList = await page.evaluate(async () => {
+      if (!("caches" in window)) return [];
+      return await caches.keys();
+    });
+
+    await page.goto("http://localhost:3000/projects/new?mode=url");
+    await page.waitForSelector("input[type=\"url\"]");
+    const urlTests = [
+      "javascript:alert(1)",
+      "data:text/html,<b>hi</b>",
+      "file:///etc/passwd",
+      "http://169.254.169.254/latest/meta-data/clip.mp4",
+      "http://admin:secret@127.0.0.1:8000/video.mp4",
+      "http://[::1]:8000/clip.mp4",
+      "http://localhost:3000/video.mp4",
+      "https://example.com/" + "a".repeat(2048) + ".mp4"
+    ];
+    const urlResults = [];
+    for (const testUrl of urlTests) {
+      await page.fill("input[type=\"url\"]", testUrl);
+      await page.click("button:has-text(\"Validate URL\")");
+      await page.waitForSelector("[role=\"status\"]");
+      const statusText = await page.locator("[role=\"status\"]").first().innerText();
+      const btnDisabled = await page.locator("button:has-text(\"Start Clipping\")").isDisabled();
+      urlResults.push({
+        input: testUrl.length > 80 ? testUrl.slice(0, 60) + "...(len=" + testUrl.length + ")" : testUrl,
+        statusText: statusText.replace(/\s+/g, " ").trim(),
+        startClippingDisabled: btnDisabled
+      });
+    }
+
+    await page.click("button[role=\"tab\"]:has-text(\"Upload Video\")");
+    await page.setInputFiles("input[type=\"file\"]", {
+      name: "fake_<b>xss</b>_clip.mp4",
+      mimeType: "text/html",
+      buffer: Buffer.from("<html><script>window.__xss=1</script></html>")
+    });
+    await page.waitForTimeout(300);
+    const fakeUploadState = await page.evaluate(() => ({
+      bodyHasValidFormat: document.body.innerText.includes("Valid format"),
+      videoSrc: document.querySelector("video")?.getAttribute("src") || null,
+      xssFlag: window.__xss ?? null
+    }));
+
+    await page.click("button[aria-label=\"Remove selected file\"]");
+    await page.waitForTimeout(200);
+    const afterRemoveState = await page.evaluate(() => ({
+      hasBrowseFiles: document.body.innerText.includes("Browse Files"),
+      videoElementCount: document.querySelectorAll("video").length
+    }));
+
+    await page.setInputFiles("input[type=\"file\"]", {
+      name: "../../etc/passwd.html",
+      mimeType: "video/mp4",
+      buffer: Buffer.from("not video")
+    });
+    await page.waitForTimeout(200);
+    const badExtError = await page.locator("[role=\"alert\"]").allInnerTexts();
+
+    await page.goto("http://localhost:3000/projects?mock=1");
+    await page.waitForTimeout(500);
+    await page.click("button[aria-label^=\"Rename \"]");
+    const xssPayload = "<b>TestXSS</b><img src=x onerror=\"window.__xss=1\">";
+    await page.fill("input[value*=\"Mock Sample\"]", xssPayload);
+    await page.click("button:has-text(\"Save Name\")");
+    await page.waitForTimeout(400);
+    const xssCheck = await page.evaluate(() => ({
+      xssExecuted: window.__xss ?? null,
+      renderedLiteralPayload: document.body.innerText.includes("<b>TestXSS</b>")
+    }));
+
+    // Test ClipEditorPage XSS & trim & save
+    await page.goto("http://localhost:3000/clips/clip-sample-01/edit?mock=1");
+    await page.waitForSelector("textarea#clip-description-textarea");
+    await page.fill("textarea#clip-description-textarea", "<svg onload=\"window.__xss=1\">Desc</svg>");
+    await page.click("button:has-text(\"Save Draft\")");
+    await page.waitForTimeout(300);
+    const editorXss = await page.evaluate(() => ({
+      xssExecuted: window.__xss ?? null,
+      hasSavedLabel: document.body.innerText.includes("Saved")
+    }));
+
+    // Test Settings arbitrary backend URL persistence
+    await page.goto("http://localhost:3000/settings");
+    await page.waitForTimeout(400);
+    await page.fill("input[placeholder*=\"127.0.0.1:8000\"]", "http://10.0.0.99:9000/untrusted");
+    await page.click("button:has-text(\"Apply Server URL\")");
+    await page.waitForTimeout(300);
+    const backendOverride = await page.evaluate(() => localStorage.getItem("clipcat-api-base-url"));
+
+    // Test Settings Reset Defaults modal keyboard accessibility (Escape)
+    await page.click("button:has-text(\"Reset Defaults\")");
+    await page.waitForSelector("[role=\"dialog\"]");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(200);
+    const dialogClosedOnEsc = (await page.locator("[role=\"dialog\"]").count()) === 0;
+
+    return {
+      externalResourcesOnLoad: resources,
+      indexedDB: idb,
+      cacheStorage: cachesList,
+      urlValidationResults: urlResults,
+      fakeMp4HtmlUploadResult: fakeUploadState,
+      afterRemoveCleanup: afterRemoveState,
+      badExtensionRejection: badExtError,
+      projectsXssTest: xssCheck,
+      editorXssTest: editorXss,
+      localStorageBackendOverride: backendOverride,
+      dialogClosedOnEsc
+    };
+  })(page);
+```
+### Page
+- Page URL: http://localhost:3000/settings
+- Page Title: Settings — ClipCat
+- Console: 10 errors, 0 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-11-15T10-08-51-749Z.log#L10-L38

@@ -12,7 +12,7 @@ import {
   Upload,
   XCircle,
 } from 'lucide-react';
-import { SdpLogo } from '../components/brand/SdpLogo';
+import { BrandHeader } from '../components/brand/BrandHeader';
 import { PullToRefresh } from '../components/mobile/PullToRefresh';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -88,48 +88,30 @@ export function MobileDashboardPage() {
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="space-y-5">
-        {/* Warm Greeting + Official ClipCat Logo Hero Card */}
-        <section className="rounded-2xl bg-ios-surface border border-ios-sep p-4 space-y-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden animate-float-gentle">
-              <img
-                src={BRAND.assets.clipcatLogo}
-                alt="ClipCat mascot logo"
-                width={64}
-                height={64}
-                className="w-full h-full object-contain"
-              />
-            </div>
-          <div className="min-w-0 space-y-0.5">
-            <p className="text-xs font-semibold text-[#AF52DE]">
-              {getWarmGreeting()}
-            </p>
-            <h2 className="font-display text-xl font-extrabold text-ios-label leading-tight">
-              Welcome to {BRAND.productName}
-            </h2>
-            <p className="text-xs text-ios-secondary leading-snug">
-              {BRAND.productTagline}
-            </p>
-          </div>
-        </div>
+        {/* Warm Greeting + Official Two-Row Mobile Brand Header */}
+        <section className="rounded-2xl bg-ios-surface border border-ios-sep p-4 space-y-3.5">
+          <BrandHeader
+            size="sm"
+            eyebrow={getWarmGreeting()}
+            title={`Welcome to ${BRAND.productName}`}
+          />
 
-        {/* Prioritized Primary Create Action */}
-        <Link to="/projects/new" className="block">
-          <Button
-            variant="accent-purple"
-            size="lg"
-            className="w-full shadow-md"
-            icon={<Plus className="w-5 h-5" />}
-          >
-            New Project
-          </Button>
-        </Link>
+          <p className="text-xs text-ios-secondary leading-snug">
+            {BRAND.productTagline}
+          </p>
 
-        <div className="flex items-center gap-2.5 pt-2 border-t border-ios-sep text-[13px] leading-[1.4] text-ios-secondary">
-          <SdpLogo size="xs" />
-          <span>{BRAND.productIdentity}</span>
-        </div>
-      </section>
+          {/* Prioritized Primary Create Action */}
+          <Link to="/projects/new" className="block pt-0.5">
+            <Button
+              variant="accent-purple"
+              size="lg"
+              className="w-full shadow-md"
+              icon={<Plus className="w-5 h-5" />}
+            >
+              New Project
+            </Button>
+          </Link>
+        </section>
 
       {/* Backend Offline Notice */}
       {projectsQuery.isError && (

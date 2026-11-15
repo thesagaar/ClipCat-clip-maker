@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { RotateCcw, Save, Trash2 } from 'lucide-react';
+import {
+  Lock,
+  Moon,
+  RotateCcw,
+  Save,
+  SlidersHorizontal,
+  Sun,
+  Trash2,
+} from 'lucide-react';
+import { trackAnalyticsEvent } from '../analytics/client';
+import { useConsentStore } from '../analytics/consentStore';
 import { DEFAULT_APP_SETTINGS, DEFAULT_CAPTION_PRESETS } from '../api';
 import { ClipCatLogo } from '../components/brand/ClipCatLogo';
 import { SdpLogo } from '../components/brand/SdpLogo';
@@ -12,7 +22,12 @@ import { Select } from '../components/ui/Select';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
 import { Toggle } from '../components/ui/Toggle';
 import { BRAND } from '../config/brand';
-import { ENV, getApiBaseUrl, setRuntimeApiBaseUrl } from '../config/env';
+import {
+  ENV,
+  getApiBaseUrl,
+  setRuntimeApiBaseUrl,
+  validateApiBaseUrl,
+} from '../config/env';
 import {
   useCaptionPresetsQuery,
   useClearTempFilesMutation,
@@ -31,6 +46,7 @@ import type {
 } from '../types/settings';
 import type { CaptionFontSizeOption, CaptionPositionOption } from '../types/project';
 import { formatBytes } from '../utils/format';
+import { getNextThemePreference, normalizeThemePreference } from '../utils/theme';
 
 export function SettingsPage() {
   const settingsQuery = useSettingsQuery();
@@ -43,40 +59,48 @@ export function SettingsPage() {
   const resetMutation = useResetSettingsMutation();
   const clearTempMutation = useClearTempFilesMutation();
   const { mockModeEnabled, setMockModeEnabled, themeMode, setThemeMode, addToast } = useUiStore();
+  const openPrivacyPreferences = useConsentStore((s) => s.openPreferences);
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState<AppSettings>(() => {
     const initial = structuredClone(DEFAULT_APP_SETTINGS);
+    initial.general.applicationName = BRAND.productName;
     initial.general.theme = themeMode;
     return initial;
   });
   const [backendUrlInput, setBackendUrlInput] = useState(() => getApiBaseUrl());
+  const [backendUrlError, setBackendUrlError] = useState<string | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
-
-  const { pathname, hash } = useLocation();
+  const [clearTempDialogOpen, setClearTempDialogOpen] = useState(false);
 
   useEffect(() => {
     if (settingsQuery.data) {
-      setForm(structuredClone(settingsQuery.data));
-      setThemeMode(settingsQuery.data.general.theme);
+      const persistedTheme = normalizeThemePreference(useUiStore.getState().themeMode);
+      const next = structuredClone(settingsQuery.data);
+      next.general.applicationName = BRAND.productName;
+      next.general.theme = persistedTheme;
+      setForm(next);
     }
-  }, [settingsQuery.data, setThemeMode]);
-
-  useEffect(() => {
-    if (!hash) return;
-    const targetId = hash.replace(/^#/, '');
-    const el = document.getElementById(targetId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [pathname, hash]);
+  }, [settingsQuery.data]);
 
   const presets = presetsQuery.data ?? DEFAULT_CAPTION_PRESETS;
 
   const handleSave = async () => {
+    if (updateMutation.isPending) return;
+    const payloadToSave: AppSettings = {
+      ...form,
+      general: {
+        ...form.general,
+        applicationName: BRAND.productName,
+      },
+    };
     try {
-      await updateMutation.mutateAsync(form);
-      setThemeMode(form.general.theme);
+      await updateMutation.mutateAsync(payloadToSave);
+      setThemeMode(payloadToSave.general.theme);
+      trackAnalyticsEvent('settings_updated', {
+        section: 'general_and_processing',
+        themeMode: payloadToSave.general.theme,
+      });
       addToast({
         variant: 'success',
         title: 'Settings Saved',
@@ -95,8 +119,10 @@ export function SettingsPage() {
   };
 
   const handleConfirmReset = async () => {
+    if (resetMutation.isPending) return;
     try {
       const defaults = await resetMutation.mutateAsync();
+      defaults.general.applicationName = BRAND.productName;
       setForm(structuredClone(defaults));
       setThemeMode(defaults.general.theme);
       setResetDialogOpen(false);
@@ -110,9 +136,11 @@ export function SettingsPage() {
     }
   };
 
-  const handleClearTemp = async () => {
+  const handleConfirmClearTemp = async () => {
+    if (clearTempMutation.isPending) return;
     try {
       const res = await clearTempMutation.mutateAsync();
+      setClearTempDialogOpen(false);
       addToast({
         variant: 'success',
         title: 'Temporary Files Cleared',
@@ -128,22 +156,33 @@ export function SettingsPage() {
   };
 
   const handleApplyBackendUrl = () => {
+    setBackendUrlError(null);
     const trimmed = backendUrlInput.trim();
-    if (trimmed && !/^https?:\/\/.+/i.test(trimmed)) {
-      addToast({
-        variant: 'error',
-        title: 'Invalid Backend URL',
-        description: 'Enter a valid http:// or https:// address (for example http://192.168.1.42:8000).',
-      });
+    if (trimmed) {
+      const check = validateApiBaseUrl(trimmed);
+      if (!check.valid) {
+        setBackendUrlError(check.error ?? 'Invalid backend URL.');
+        addToast({
+          variant: 'error',
+          title: 'Invalid Backend URL',
+          description: check.error ?? 'Enter a valid http:// or https:// address.',
+        });
+        return;
+      }
+    }
+
+    const result = setRuntimeApiBaseUrl(trimmed || null);
+    if (!result.valid) {
+      setBackendUrlError(result.error ?? 'Invalid backend URL.');
       return;
     }
-    const activeUrl = setRuntimeApiBaseUrl(trimmed || null);
-    setBackendUrlInput(activeUrl);
+
+    setBackendUrlInput(result.normalized);
     queryClient.invalidateQueries();
     addToast({
       variant: 'success',
       title: 'Backend Address Updated',
-      description: `FastAPI requests now target ${activeUrl}.`,
+      description: `FastAPI requests now target ${result.normalized}.`,
     });
   };
 
@@ -158,7 +197,7 @@ export function SettingsPage() {
             Application Settings
           </h2>
           <p className="text-sm text-ios-secondary mt-1">
-            Configure local Whisper models, FFmpeg thread allocation, default captions, and directories.
+            Configure local Whisper models, FFmpeg thread allocation, default captions, directories, and privacy preferences.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">
@@ -189,36 +228,78 @@ export function SettingsPage() {
       <section className="rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-4">
         <h3 className="font-display text-base font-bold text-ios-label">General</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Input
-            label="Application Name"
-            value={form.general.applicationName}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                general: { ...form.general, applicationName: e.target.value },
-              })
-            }
-          />
-          <Select
-            label="Theme"
-            value={themeMode}
-            onChange={(e) => {
-              const nextTheme = e.target.value as 'dark' | 'light' | 'system';
-              setThemeMode(nextTheme);
-              setForm({
-                ...form,
-                general: {
-                  ...form.general,
-                  theme: nextTheme,
-                },
-              });
-            }}
-            options={[
-              { value: 'dark', label: 'iOS Dark (Default)' },
-              { value: 'light', label: 'iOS Light (Grouped)' },
-              { value: 'system', label: 'Follow System' },
-            ]}
-          />
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="settings-constant-app-name"
+              className="text-sm font-medium text-ios-label inline-flex items-center gap-1.5"
+            >
+              <span>Application Name</span>
+              <Lock className="w-3.5 h-3.5 text-ios-tertiary-label" aria-hidden="true" />
+            </label>
+            <input
+              id="settings-constant-app-name"
+              type="text"
+              value={BRAND.productName}
+              readOnly
+              aria-readonly="true"
+              className="h-11 sm:h-10 w-full rounded-lg bg-ios-bg/80 px-3 text-sm font-semibold text-ios-secondary border border-ios-sep cursor-not-allowed select-all focus:outline-none"
+            />
+            <p className="text-[11px] text-ios-tertiary-label">
+              Product identity is fixed and cannot be changed.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="settings-theme-toggle"
+              className="text-sm font-medium text-ios-label"
+            >
+              Theme
+            </label>
+            <button
+              id="settings-theme-toggle"
+              type="button"
+              role="switch"
+              aria-checked={themeMode === 'dark'}
+              aria-label={`Theme: ${themeMode}`}
+              onClick={() => {
+                const nextTheme = getNextThemePreference(themeMode);
+                setThemeMode(nextTheme);
+                setForm((prev) => ({
+                  ...prev,
+                  general: {
+                    ...prev.general,
+                    theme: nextTheme,
+                  },
+                }));
+              }}
+              className="h-11 sm:h-10 w-full rounded-lg bg-ios-input px-3 text-sm text-ios-label border border-ios-sep hover:border-ios-blue/60 focus-visible:border-ios-blue focus-visible:outline-none transition-colors cursor-pointer flex items-center justify-between gap-2"
+            >
+              <span className="inline-flex items-center gap-2 font-medium min-w-0">
+                {themeMode === 'dark' ? (
+                  <Moon className="w-4 h-4 text-[#C8B9F1] shrink-0" aria-hidden="true" />
+                ) : (
+                  <Sun className="w-4 h-4 text-ios-orange shrink-0" aria-hidden="true" />
+                )}
+                <span>{themeMode}</span>
+              </span>
+              <span
+                aria-hidden="true"
+                className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors duration-150 ${
+                  themeMode === 'dark'
+                    ? 'bg-[#7040DC] border-[#7040DC]'
+                    : 'bg-ios-tertiary border-ios-sep'
+                }`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform duration-150 ${
+                    themeMode === 'dark' ? 'translate-x-4.5' : 'translate-x-0.5'
+                  }`}
+                />
+              </span>
+            </button>
+          </div>
+
           <Select
             label="Language"
             value={form.general.language}
@@ -257,7 +338,7 @@ export function SettingsPage() {
       {/* PROCESSING */}
       <section className="rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-5">
         <h3 className="font-display text-base font-bold text-ios-label">
-          Processing & Hardware Budget
+          Processing &amp; Hardware Budget
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Select
@@ -291,7 +372,7 @@ export function SettingsPage() {
                 ...form,
                 processing: {
                   ...form.processing,
-                  cpuThreads: Number(e.target.value) || 4,
+                  cpuThreads: Math.min(32, Math.max(1, Number(e.target.value) || 4)),
                 },
               })
             }
@@ -307,7 +388,7 @@ export function SettingsPage() {
                 ...form,
                 processing: {
                   ...form.processing,
-                  defaultClipCount: Number(e.target.value) || 5,
+                  defaultClipCount: Math.min(30, Math.max(1, Number(e.target.value) || 5)),
                 },
               })
             }
@@ -323,7 +404,7 @@ export function SettingsPage() {
                 ...form,
                 processing: {
                   ...form.processing,
-                  concurrentJobs: Number(e.target.value) || 1,
+                  concurrentJobs: Math.min(4, Math.max(1, Number(e.target.value) || 1)),
                 },
               })
             }
@@ -335,13 +416,14 @@ export function SettingsPage() {
             label="Default Min Duration (sec)"
             type="number"
             min={5}
+            max={120}
             value={form.processing.defaultMinDurationSec}
             onChange={(e) =>
               setForm({
                 ...form,
                 processing: {
                   ...form.processing,
-                  defaultMinDurationSec: Number(e.target.value) || 15,
+                  defaultMinDurationSec: Math.max(5, Number(e.target.value) || 15),
                 },
               })
             }
@@ -350,13 +432,14 @@ export function SettingsPage() {
             label="Default Preferred Duration (sec)"
             type="number"
             min={10}
+            max={240}
             value={form.processing.defaultPreferredDurationSec}
             onChange={(e) =>
               setForm({
                 ...form,
                 processing: {
                   ...form.processing,
-                  defaultPreferredDurationSec: Number(e.target.value) || 45,
+                  defaultPreferredDurationSec: Math.max(10, Number(e.target.value) || 45),
                 },
               })
             }
@@ -365,13 +448,14 @@ export function SettingsPage() {
             label="Default Max Duration (sec)"
             type="number"
             min={15}
+            max={300}
             value={form.processing.defaultMaxDurationSec}
             onChange={(e) =>
               setForm({
                 ...form,
                 processing: {
                   ...form.processing,
-                  defaultMaxDurationSec: Number(e.target.value) || 90,
+                  defaultMaxDurationSec: Math.min(300, Math.max(15, Number(e.target.value) || 90)),
                 },
               })
             }
@@ -464,7 +548,7 @@ export function SettingsPage() {
                   captions: { ...form.captions, highlightColor: e.target.value },
                 })
               }
-              className="h-10 w-full rounded-lg bg-ios-input border border-ios-sep p-1 cursor-pointer"
+              className="h-11 sm:h-10 w-full rounded-lg bg-ios-input border border-ios-sep p-1 cursor-pointer"
             />
           </div>
         </div>
@@ -481,7 +565,7 @@ export function SettingsPage() {
             size="sm"
             loading={clearTempMutation.isPending}
             icon={<Trash2 className="w-3.5 h-3.5" />}
-            onClick={handleClearTemp}
+            onClick={() => setClearTempDialogOpen(true)}
           >
             Clear Temporary Files
           </Button>
@@ -490,6 +574,7 @@ export function SettingsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input
             label="Project Directory"
+            maxLength={240}
             value={form.storage.projectDirectory}
             onChange={(e) =>
               setForm({
@@ -500,6 +585,7 @@ export function SettingsPage() {
           />
           <Input
             label="Export Directory"
+            maxLength={240}
             value={form.storage.exportDirectory}
             onChange={(e) =>
               setForm({
@@ -510,6 +596,7 @@ export function SettingsPage() {
           />
           <Input
             label="Temporary Directory"
+            maxLength={240}
             value={form.storage.tempDirectory}
             onChange={(e) =>
               setForm({
@@ -533,7 +620,7 @@ export function SettingsPage() {
       <section className="rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-display text-base font-bold text-ios-label">
-            System & Backend Connection
+            System &amp; Backend Connection
           </h3>
           <Link to="/system" className="text-xs font-medium text-ios-blue hover:underline">
             Open System Diagnostics
@@ -548,8 +635,12 @@ export function SettingsPage() {
                 type="url"
                 placeholder={ENV.API_BASE_URL}
                 value={backendUrlInput}
-                onChange={(e) => setBackendUrlInput(e.target.value)}
-                helperText="On mobile devices, enter your host computer's LAN IP (e.g. http://192.168.1.25:8000) rather than 127.0.0.1."
+                error={backendUrlError ?? undefined}
+                onChange={(e) => {
+                  setBackendUrlInput(e.target.value);
+                  setBackendUrlError(null);
+                }}
+                helperText="On mobile devices over LAN HTTP dev, enter your host IP (e.g. http://192.168.1.25:8000). On HTTPS deployments, use https:// or local loopback."
               />
             </div>
             <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -560,13 +651,14 @@ export function SettingsPage() {
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    const resetUrl = setRuntimeApiBaseUrl(null);
-                    setBackendUrlInput(resetUrl);
+                    const resetRes = setRuntimeApiBaseUrl(null);
+                    setBackendUrlInput(resetRes.normalized);
+                    setBackendUrlError(null);
                     queryClient.invalidateQueries();
                     addToast({
                       variant: 'info',
                       title: 'Backend URL Restored',
-                      description: `Reverted to default (${resetUrl}).`,
+                      description: `Reverted to default (${resetRes.normalized}).`,
                     });
                   }}
                 >
@@ -718,17 +810,34 @@ export function SettingsPage() {
       <section
         id="privacy"
         aria-label="Privacy and Data Handling"
-        className="scroll-mt-20 rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-3"
+        className="scroll-mt-20 rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-4"
       >
-        <h3 className="font-display text-base font-bold text-ios-label">
-          Privacy &amp; Data Handling
-        </h3>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-display text-base font-bold text-ios-label">
+            Privacy, Analytics &amp; Data Handling
+          </h3>
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<SlidersHorizontal className="w-3.5 h-3.5" />}
+            onClick={openPrivacyPreferences}
+          >
+            Privacy &amp; Analytics Preferences
+          </Button>
+        </div>
+
         <p className="text-xs sm:text-sm text-ios-secondary leading-relaxed">
-          ClipCat runs strictly local-first. Uploaded videos, extracted audio, speech transcripts, and exported MP4/SRT files remain on your computer and your configured local FastAPI backend. No analytics, tracking beacons, user accounts, or unnecessary personal data are collected.
+          {BRAND.productName} processes uploaded video, extracted audio, speech transcripts, captions, and rendered exports between your browser and your configured FastAPI backend. Media files, transcripts, project titles, filenames, and credentials are strictly excluded from telemetry. Optional privacy-conscious product usage analytics and sanitized technical error diagnostics remain disabled unless both environment configuration and your explicit consent allow them.
         </p>
-        <p className="text-xs text-ios-tertiary-label">
-          Only interface preferences (theme selection, sidebar state, and your local backend URL) are stored in browser local storage.
-        </p>
+
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <Link to={BRAND.privacyRoute} className="text-ios-blue font-medium hover:underline">
+            Read Full Privacy Policy
+          </Link>
+          <Link to={BRAND.termsRoute} className="text-ios-blue font-medium hover:underline">
+            Read Terms &amp; Conditions
+          </Link>
+        </div>
       </section>
 
       <ConfirmDialog
@@ -740,6 +849,17 @@ export function SettingsPage() {
         confirmLabel="Reset Settings"
         danger
         loading={resetMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={clearTempDialogOpen}
+        onClose={() => setClearTempDialogOpen(false)}
+        onConfirm={handleConfirmClearTemp}
+        title="Clear Temporary Processing Files"
+        message="Delete extracted WAV audio and intermediate frame caches from the backend temporary directory? Saved projects and finished MP4 exports remain intact."
+        confirmLabel="Clear Temporary Files"
+        danger
+        loading={clearTempMutation.isPending}
       />
     </div>
   );

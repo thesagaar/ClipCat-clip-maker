@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight,
@@ -10,6 +10,7 @@ import {
   RotateCcw,
   XCircle,
 } from 'lucide-react';
+import { trackAnalyticsEvent } from '../analytics/client';
 import { MascotAssistant } from '../components/brand/MascotAssistant';
 import { Button } from '../components/ui/Button';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -90,15 +91,32 @@ export function ProcessingPage() {
   const job = jobQuery.data;
   const project = projectQuery.data;
 
+  const reportedStatusRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (job?.status === 'completed' && projectId) {
+    if (!job) return;
+    const key = `${job.id}:${job.status}`;
+    if (reportedStatusRef.current === key) return;
+
+    if (job.status === 'completed' && projectId) {
+      reportedStatusRef.current = key;
+      trackAnalyticsEvent('processing_stage_completed', {
+        stage: job.currentStageId ?? 'export_validation',
+        durationMs: (job.elapsedSec ?? 0) * 1000,
+      });
       addToast({
         variant: 'success',
         title: 'Clips Ready',
         description: `"${job.projectName}" finished processing.`,
       });
+    } else if (job.status === 'failed') {
+      reportedStatusRef.current = key;
+      trackAnalyticsEvent('processing_failed', {
+        stage: job.currentStageId ?? 'unknown',
+        errorCategory: 'pipeline_failed',
+      });
     }
-  }, [job?.status, job?.projectName, projectId, addToast]);
+  }, [job?.id, job?.status, job?.projectName, job?.currentStageId, job?.elapsedSec, projectId, addToast]);
 
   const stages: ProcessingStage[] =
     job?.stages && job.stages.length > 0

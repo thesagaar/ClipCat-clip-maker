@@ -1,3 +1,4 @@
+import { captureSanitizedError } from '../analytics/errorAdapter';
 import { ENV, getApiBaseUrl } from '../config/env';
 import {
   ApiClientError,
@@ -30,7 +31,7 @@ export function isMockApiEnabled(): boolean {
   if (mockModeRuntimeOverride !== null) {
     return mockModeRuntimeOverride;
   }
-  if (typeof window !== 'undefined') {
+  if (ENV.IS_DEV && typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
     if (params.get('mock') === '1') return true;
   }
@@ -129,7 +130,9 @@ export async function apiRequest<T>(
         code: 'CANCELLED',
       });
     }
-    throw normalizeUnknownError(error);
+    const normalized = normalizeUnknownError(error);
+    captureSanitizedError(normalized, { operation: `${method} ${path.split('?')[0] ?? '/'}` });
+    throw normalized;
   } finally {
     clearTimeout(timer);
     externalSignal?.removeEventListener('abort', onExternalAbort);

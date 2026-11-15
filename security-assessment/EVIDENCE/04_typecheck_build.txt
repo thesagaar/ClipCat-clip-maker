@@ -1,0 +1,117 @@
+=== COMMAND: npx tsc --noEmit ===
+EXIT_CODE=0
+
+=== COMMAND: npm run build ===
+
+> react-example@0.0.0 build
+> vite build
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vite.config.ts:11:27). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 2185 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                               1.76 kB │ gzip:   0.75 kB
+dist/assets/index-B1w1bnhw.css               51.18 kB │ gzip:   9.89 kB
+dist/assets/arrow-right-DsxtWTUT.js           0.15 kB │ gzip:   0.15 kB
+dist/assets/search-4SyLR1_Q.js                0.16 kB │ gzip:   0.16 kB
+dist/assets/play-7T6FVG-L.js                  0.18 kB │ gzip:   0.17 kB
+dist/assets/rotate-ccw-jtmKSt2i.js            0.19 kB │ gzip:   0.17 kB
+dist/assets/copy-BmFbCvgu.js                  0.22 kB │ gzip:   0.19 kB
+dist/assets/save-BgaPvHud.js                  0.31 kB │ gzip:   0.22 kB
+dist/assets/trash-2-vOzinCn8.js               0.31 kB │ gzip:   0.21 kB
+dist/assets/upload-DsbeLsTi.js                0.41 kB │ gzip:   0.27 kB
+dist/assets/Select-wkmN7SsW.js                1.08 kB │ gzip:   0.54 kB
+dist/assets/projectDraftStore-CZZn-m8b.js     1.13 kB │ gzip:   0.48 kB
+dist/assets/Input-BiESPoKd.js                 1.19 kB │ gzip:   0.58 kB
+dist/assets/filters-Dl2Qc2gl.js               1.34 kB │ gzip:   0.49 kB
+dist/assets/Toggle-BN8ermU-.js                1.44 kB │ gzip:   0.68 kB
+dist/assets/EmptyState-CVuBiTVk.js            1.71 kB │ gzip:   0.72 kB
+dist/assets/Button-BIrl54J-.js                1.75 kB │ gzip:   0.83 kB
+dist/assets/MascotAssistant-DtSII77p.js       2.06 kB │ gzip:   0.91 kB
+dist/assets/PullToRefresh-CheJ_KI5.js         2.32 kB │ gzip:   1.05 kB
+dist/assets/format-Cm8DVRBo.js                2.88 kB │ gzip:   1.23 kB
+dist/assets/Modal-vOh7GyOd.js                 2.94 kB │ gzip:   1.05 kB
+dist/assets/BottomSheet-9vq2sGv3.js           3.19 kB │ gzip:   1.20 kB
+dist/assets/ErrorState-BFCS6pEB.js            3.26 kB │ gzip:   1.32 kB
+dist/assets/validation-tbCFiLmN.js            3.72 kB │ gzip:   1.46 kB
+dist/assets/TemplatesPage-DrGyIX24.js         5.66 kB │ gzip:   1.84 kB
+dist/assets/ClipCard-toE6vWGo.js              6.86 kB │ gzip:   1.95 kB
+dist/assets/ClipLibraryPage-VS53RTOm.js       8.98 kB │ gzip:   2.72 kB
+dist/assets/ClipDiscoveryPage-RvcwBGIZ.js    10.35 kB │ gzip:   3.05 kB
+dist/assets/ProcessingPage-z4KFGHKZ.js       13.45 kB │ gzip:   3.52 kB
+dist/assets/ExportManagerPage-Bq9XLCld.js    13.63 kB │ gzip:   3.23 kB
+dist/assets/CaptionPresetsPage-Bn1K3QNX.js   14.83 kB │ gzip:   3.61 kB
+dist/assets/ProjectsPage-CMR86BNh.js         17.29 kB │ gzip:   4.05 kB
+dist/assets/SystemStatusPage-Ccn7POVZ.js     19.21 kB │ gzip:   3.96 kB
+dist/assets/SettingsPage-WmDlJP3s.js         26.38 kB │ gzip:   5.28 kB
+dist/assets/ClipEditorPage-CzBIW3Xf.js       31.87 kB │ gzip:   6.68 kB
+dist/assets/NewProjectPage-BkBWuYI2.js       32.42 kB │ gzip:   7.31 kB
+dist/assets/uiStore-DT1ciJI8.js              37.28 kB │ gzip:  12.89 kB
+dist/assets/DashboardPage-BY5vld53.js        40.21 kB │ gzip:   6.05 kB
+dist/assets/index-BnTMaKV7.js               716.02 kB │ gzip: 216.53 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 928ms
+EXIT_CODE=0
+
+=== BUILD ARTIFACTS (dist/) ===
+-rw-r--r-- 1 root root 1.3M Nov 15 10:06 dist/assets/aistudio/clipcat_ai__logo_01f48970.png
+-rw-r--r-- 1 root root  28K Nov 15 10:06 dist/assets/aistudio/ClipCat_Pre_Backend_Frontend_Security_Assessment_Prompt_674f8152.txt
+-rw-r--r-- 1 root root 1.6M Nov 15 10:06 dist/assets/aistudio/file_0000000028208211a1476a6e85d366f5_426bfd4b.png
+-rw-r--r-- 1 root root 445K Nov 15 10:06 dist/assets/aistudio/Screenshot_2026-11-15-13-58-40-15_96b26121e545231a3c569311a54cda96_2a5e2f04.jpg
+-rw-r--r-- 1 root root  16K Nov 15 10:06 dist/assets/aistudio/sdp-logo-mark_5f38d36d.svg
+-rw-r--r-- 1 root root  156 Nov 15 10:06 dist/assets/arrow-right-DsxtWTUT.js
+-rw-r--r-- 1 root root 3.2K Nov 15 10:06 dist/assets/BottomSheet-9vq2sGv3.js
+-rw-r--r-- 1 root root 1.8K Nov 15 10:06 dist/assets/Button-BIrl54J-.js
+-rw-r--r-- 1 root root  15K Nov 15 10:06 dist/assets/CaptionPresetsPage-Bn1K3QNX.js
+-rw-r--r-- 1 root root 6.8K Nov 15 10:06 dist/assets/ClipCard-toE6vWGo.js
+-rw-r--r-- 1 root root  11K Nov 15 10:06 dist/assets/ClipDiscoveryPage-RvcwBGIZ.js
+-rw-r--r-- 1 root root  32K Nov 15 10:06 dist/assets/ClipEditorPage-CzBIW3Xf.js
+-rw-r--r-- 1 root root 8.8K Nov 15 10:06 dist/assets/ClipLibraryPage-VS53RTOm.js
+-rw-r--r-- 1 root root  227 Nov 15 10:06 dist/assets/copy-BmFbCvgu.js
+-rw-r--r-- 1 root root  40K Nov 15 10:06 dist/assets/DashboardPage-BY5vld53.js
+-rw-r--r-- 1 root root 1.7K Nov 15 10:06 dist/assets/EmptyState-CVuBiTVk.js
+-rw-r--r-- 1 root root 3.2K Nov 15 10:06 dist/assets/ErrorState-BFCS6pEB.js
+-rw-r--r-- 1 root root  14K Nov 15 10:06 dist/assets/ExportManagerPage-Bq9XLCld.js
+-rw-r--r-- 1 root root 1.4K Nov 15 10:06 dist/assets/filters-Dl2Qc2gl.js
+-rw-r--r-- 1 root root 2.9K Nov 15 10:06 dist/assets/format-Cm8DVRBo.js
+-rw-r--r-- 1 root root  50K Nov 15 10:06 dist/assets/index-B1w1bnhw.css
+-rw-r--r-- 1 root root 700K Nov 15 10:06 dist/assets/index-BnTMaKV7.js
+-rw-r--r-- 1 root root 1.2K Nov 15 10:06 dist/assets/Input-BiESPoKd.js
+-rw-r--r-- 1 root root 2.1K Nov 15 10:06 dist/assets/MascotAssistant-DtSII77p.js
+-rw-r--r-- 1 root root 2.9K Nov 15 10:06 dist/assets/Modal-vOh7GyOd.js
+-rw-r--r-- 1 root root  32K Nov 15 10:06 dist/assets/NewProjectPage-BkBWuYI2.js
+-rw-r--r-- 1 root root  181 Nov 15 10:06 dist/assets/play-7T6FVG-L.js
+-rw-r--r-- 1 root root  14K Nov 15 10:06 dist/assets/ProcessingPage-z4KFGHKZ.js
+-rw-r--r-- 1 root root 1.2K Nov 15 10:06 dist/assets/projectDraftStore-CZZn-m8b.js
+-rw-r--r-- 1 root root  17K Nov 15 10:06 dist/assets/ProjectsPage-CMR86BNh.js
+-rw-r--r-- 1 root root 2.3K Nov 15 10:06 dist/assets/PullToRefresh-CheJ_KI5.js
+-rw-r--r-- 1 root root  191 Nov 15 10:06 dist/assets/rotate-ccw-jtmKSt2i.js
+-rw-r--r-- 1 root root  318 Nov 15 10:06 dist/assets/save-BgaPvHud.js
+-rw-r--r-- 1 root root  165 Nov 15 10:06 dist/assets/search-4SyLR1_Q.js
+-rw-r--r-- 1 root root 1.1K Nov 15 10:06 dist/assets/Select-wkmN7SsW.js
+-rw-r--r-- 1 root root  26K Nov 15 10:06 dist/assets/SettingsPage-WmDlJP3s.js
+-rw-r--r-- 1 root root  19K Nov 15 10:06 dist/assets/SystemStatusPage-Ccn7POVZ.js
+-rw-r--r-- 1 root root 5.6K Nov 15 10:06 dist/assets/TemplatesPage-DrGyIX24.js
+-rw-r--r-- 1 root root 1.5K Nov 15 10:06 dist/assets/Toggle-BN8ermU-.js
+-rw-r--r-- 1 root root  319 Nov 15 10:06 dist/assets/trash-2-vOzinCn8.js
+-rw-r--r-- 1 root root  37K Nov 15 10:06 dist/assets/uiStore-DT1ciJI8.js
+-rw-r--r-- 1 root root  410 Nov 15 10:06 dist/assets/upload-DsbeLsTi.js
+-rw-r--r-- 1 root root 3.7K Nov 15 10:06 dist/assets/validation-tbCFiLmN.js
+-rw-r--r-- 1 root root 7.1K Nov 15 10:06 dist/brand/clipcat-favicon.png
+-rw-r--r-- 1 root root  69K Nov 15 10:06 dist/brand/clipcat-icon.png
+-rw-r--r-- 1 root root 305K Nov 15 10:06 dist/brand/clipcat-logo.png
+-rw-r--r-- 1 root root  43K Nov 15 10:06 dist/brand/clipcat-logo-small.png
+-rw-r--r-- 1 root root 136K Nov 15 10:06 dist/brand/clipcat-mascot.png
+-rw-r--r-- 1 root root  32K Nov 15 10:06 dist/brand/favicon.ico
+-rw-r--r-- 1 root root  31K Nov 15 10:06 dist/brand/sdp-logo.png
+-rw-r--r-- 1 root root  16K Nov 15 10:06 dist/brand/sdp-logo.svg
+-rw-r--r-- 1 root root 1.8K Nov 15 10:06 dist/index.html

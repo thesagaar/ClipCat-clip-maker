@@ -10,6 +10,8 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+import { trackAnalyticsEvent } from '../analytics/client';
+import { bucketFileSize, extractSafeExtension } from '../analytics/sanitize';
 import {
   createProjectFromUrl,
   startProjectProcessing,
@@ -81,6 +83,7 @@ export function NewProjectPage() {
 
     if (!validation.valid) {
       setFileError(validation.error ?? 'Invalid video file.');
+      trackAnalyticsEvent('upload_validation_failed', { reasonCode: 'invalid_file_input' });
       return;
     }
 
@@ -144,10 +147,13 @@ export function NewProjectPage() {
     (inputMode === 'url' && Boolean(urlValidation?.valid && urlValidation.canAutoDownload));
 
   const handleStartClipping = async () => {
+    if (isSubmitting) return;
     setSubmitError(null);
+    trackAnalyticsEvent('project_creation_started', { inputMode });
 
     if (inputMode === 'upload' && !selectedFile) {
       setFileError('Please select a supported video file (MP4, MOV, MKV, or WEBM).');
+      trackAnalyticsEvent('upload_validation_failed', { reasonCode: 'missing_file' });
       return;
     }
 
@@ -160,6 +166,7 @@ export function NewProjectPage() {
             validation.message ||
             'Please provide a direct downloadable video URL or switch to Upload Video.'
         );
+        trackAnalyticsEvent('upload_validation_failed', { reasonCode: `url_${validation.category}` });
         return;
       }
     }
@@ -178,6 +185,10 @@ export function NewProjectPage() {
     try {
       let createdProject;
       if (inputMode === 'upload' && selectedFile) {
+        trackAnalyticsEvent('upload_started', {
+          fileExtension: extractSafeExtension(selectedFile.name),
+          sizeBucket: bucketFileSize(selectedFile.size),
+        });
         const resLabel =
           fileMetadata?.width && fileMetadata?.height
             ? `${fileMetadata.width}x${fileMetadata.height}`
@@ -199,6 +210,18 @@ export function NewProjectPage() {
       }
 
       const startResp = await startProjectProcessing(createdProject.id, config);
+      trackAnalyticsEvent('project_creation_completed', {
+        inputMode,
+        aspectRatio: config.aspectRatio,
+        captionsEnabled: config.captionsEnabled,
+        resolution: config.outputResolution,
+      });
+      trackAnalyticsEvent('processing_started', {
+        aspectRatio: config.aspectRatio,
+        resolution: config.outputResolution,
+        captionsEnabled: config.captionsEnabled,
+        desiredClipCount: config.desiredClipCount,
+      });
       addNotification({
         title: 'Processing Started',
         message: `Project "${createdProject.name}" queued for AI clipping.`,

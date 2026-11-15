@@ -1,11 +1,12 @@
 import type { CaptionFontSizeOption, CaptionPositionOption } from './project';
+import type { ThemePreference } from '../utils/theme';
 
 export type WhisperModelSize = 'tiny' | 'base' | 'small' | 'medium' | 'large-v3';
 export type StartupBehavior = 'dashboard' | 'new_project' | 'last_project';
 
 export interface GeneralSettings {
   applicationName: string;
-  theme: 'dark' | 'light' | 'system';
+  theme: ThemePreference;
   language: string;
   startupBehavior: StartupBehavior;
 }

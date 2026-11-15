@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { BRAND } from '../../config/brand';
+import { OptimizedImage } from './OptimizedImage';
 
 interface EmptyStateProps {
   icon: ReactNode;
@@ -22,9 +23,11 @@ export function EmptyState({
     <div className="flex flex-col items-center justify-center text-center rounded-xl bg-ios-surface border border-ios-sep px-6 py-10 sm:py-12">
       {showMascot && !imgError ? (
         <div className="w-20 h-14 flex items-center justify-center mb-4 overflow-hidden animate-float-gentle">
-          <img
+          <OptimizedImage
             src={BRAND.assets.clipcatMascot}
-            alt="ClipCat mascot logo"
+            webpSrc={BRAND.assets.clipcatMascotWebp}
+            alt=""
+            aria-hidden="true"
             width={80}
             height={58}
             loading="lazy"

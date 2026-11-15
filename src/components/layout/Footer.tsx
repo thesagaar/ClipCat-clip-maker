@@ -1,38 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ExternalLink, ShieldCheck } from 'lucide-react';
-import { SdpLogo } from '../brand/SdpLogo';
+import { ChevronDown, ExternalLink, ShieldCheck, SlidersHorizontal } from 'lucide-react';
+import { useConsentStore } from '../../analytics/consentStore';
 import { BRAND } from '../../config/brand';
-import { getPlatformDisplayLabel } from '../../utils/desktop';
 import { cn } from '../../utils/cn';
-
-interface FooterLinkItem {
-  label: string;
-  to?: string;
-  href?: string;
-}
-
-const WORKSPACE_LINKS: FooterLinkItem[] = [
-  { label: 'Dashboard', to: '/' },
-  { label: 'Create New Project', to: '/projects/new' },
-  { label: 'All Projects', to: '/projects' },
-  { label: 'Clip Library', to: '/clips' },
-  { label: 'Export Manager', to: '/exports' },
-];
-
-const STUDIO_LINKS: FooterLinkItem[] = [
-  { label: 'Caption Presets', to: '/presets' },
-  { label: 'Workflow Templates', to: '/templates' },
-  { label: 'Application Settings', to: '/settings' },
-  { label: 'System Status & Diagnostics', to: '/system' },
-];
-
-const SDP_LINKS: FooterLinkItem[] = [
-  { label: 'Official Website', href: BRAND.website },
-  { label: 'Contact & Support', href: BRAND.supportUrl },
-  { label: 'About ClipCat', to: '/settings#about' },
-  { label: 'Privacy & Data Handling', to: '/settings#privacy' },
-];
+import { getPlatformDisplayLabel } from '../../utils/desktop';
+import { BrandHeader } from '../brand/BrandHeader';
+import {
+  SDP_LINKS,
+  STUDIO_LINKS,
+  WORKSPACE_LINKS,
+  type FooterLinkItem,
+} from './footerConfig';
 
 function FooterNavLink({ item }: { item: FooterLinkItem }) {
   const linkClass =
@@ -62,7 +41,7 @@ function FooterNavLink({ item }: { item: FooterLinkItem }) {
 export function Footer() {
   const [studioOpen, setStudioOpen] = useState(false);
   const [sdpOpen, setSdpOpen] = useState(false);
-  const [logoError, setLogoError] = useState(false);
+  const openPreferences = useConsentStore((s) => s.openPreferences);
   const platformLabel = getPlatformDisplayLabel();
 
   return (
@@ -74,48 +53,7 @@ export function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
           {/* Brand Section */}
           <div className="lg:col-span-4 space-y-4">
-            <div className="space-y-2">
-              {/* Row 1: ClipCat logo + product name on left, SDP logo aligned right */}
-              <div className="flex items-center justify-between gap-3">
-                <Link
-                  to="/"
-                  aria-label="ClipCat Home"
-                  className="flex items-center gap-3 min-w-0 group"
-                >
-                  {!logoError ? (
-                    <img
-                      src={BRAND.assets.clipcatLogoSmall}
-                      alt="ClipCat mascot logo"
-                      width={48}
-                      height={48}
-                      onError={() => setLogoError(true)}
-                      className="w-12 h-12 object-contain shrink-0 rounded-xl transition-transform duration-200 group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-xl bg-[#30194E] border border-[#7040DC]/50 flex items-center justify-center shrink-0 text-xs font-bold text-white">
-                      CC
-                    </div>
-                  )}
-                  <span className="font-display text-lg font-extrabold text-ios-label tracking-tight leading-none">
-                    {BRAND.productName}
-                  </span>
-                </Link>
-
-                <Link
-                  to="/settings#about"
-                  aria-label={BRAND.parentBrandName}
-                  title={BRAND.developedByStatement}
-                  className="shrink-0 rounded-xl p-1 hover:bg-ios-tertiary/60 transition-colors"
-                >
-                  <SdpLogo size="sm" />
-                </Link>
-              </div>
-
-              {/* Row 2: Unobstructed full-width attribution (never truncated) */}
-              <p className="text-[13.5px] sm:text-sm font-normal leading-[1.4] text-ios-secondary">
-                A product by {BRAND.parentBrandName}
-              </p>
-            </div>
+            <BrandHeader size="md" />
 
             <div className="space-y-2">
               <p className="font-display text-lg sm:text-xl font-extrabold text-ios-label leading-snug text-balance">
@@ -232,10 +170,20 @@ export function Footer() {
             <p className="text-[11px] text-ios-tertiary-label">
               {BRAND.footerAttribution}
             </p>
-            <p className="inline-flex items-center gap-1.5 text-[11px] text-ios-green font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-              <span>Local-first · Zero analytics or telemetry collected</span>
-            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <p className="inline-flex items-center gap-1.5 text-[11px] text-ios-green font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                <span>Local-first media processing · Privacy-conscious optional analytics</span>
+              </p>
+              <button
+                type="button"
+                onClick={openPreferences}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-ios-blue hover:underline cursor-pointer min-h-[32px]"
+              >
+                <SlidersHorizontal className="w-3 h-3 shrink-0" aria-hidden="true" />
+                <span>Privacy Preferences</span>
+              </button>
+            </div>
           </div>
 
           <p className="hidden sm:block font-mono tabular-nums text-[11px] text-ios-tertiary-label shrink-0">

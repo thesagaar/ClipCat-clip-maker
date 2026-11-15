@@ -2,6 +2,7 @@ import {
   MAX_UPLOAD_SIZE_BYTES,
   SUPPORTED_VIDEO_EXTENSIONS,
   SUPPORTED_VIDEO_MIME_TYPES,
+  isLoopbackHostname,
 } from '../config/env';
 import type { ProcessingConfig, UrlValidationResult } from '../types/project';
 
@@ -10,34 +11,95 @@ export interface FileValidationResult {
   error?: string;
 }
 
+const DISALLOWED_CONTROL_CHARS_RE = /[\u0000-\u001F\u007F]/;
+
+export function sanitizeDownloadFilename(rawName: string, extension: string): string {
+  const normalizedExt = extension.startsWith('.') ? extension.toLowerCase() : `.${extension.toLowerCase()}`;
+  const cleanedBase = rawName
+    .replace(DISALLOWED_CONTROL_CHARS_RE, '')
+    .replace(/[/\\]+/g, '_')
+    .replace(/\.\.+/g, '_')
+    .replace(/[^a-zA-Z0-9._-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^[._-]+|[._-]+$/g, '')
+    .slice(0, 100);
+
+  const safeBase = cleanedBase || 'clipcat_export';
+  if (safeBase.toLowerCase().endsWith(normalizedExt)) {
+    return safeBase;
+  }
+  return `${safeBase}${normalizedExt}`;
+}
+
+export function isPrivateOrInternalHost(hostname: string): boolean {
+  const lower = hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (!lower) return true;
+  if (isLoopbackHostname(lower) || lower === '0.0.0.0') return true;
+  if (lower.endsWith('.local') || lower.endsWith('.internal') || lower.endsWith('.localhost')) {
+    return true;
+  }
+
+  // IPv6 unique local / link-local ranges
+  if (lower.includes(':')) {
+    if (
+      lower === '::1' ||
+      lower === '::' ||
+      lower.startsWith('fe80:') ||
+      lower.startsWith('fc') ||
+      lower.startsWith('fd')
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  // IPv4 private / link-local / CGNAT ranges
+  const ipv4Match = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(lower);
+  if (ipv4Match) {
+    const a = Number(ipv4Match[1]);
+    const b = Number(ipv4Match[2]);
+    if (a === 10 || a === 127 || a === 0) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+  }
+
+  return false;
+}
+
 export function validateVideoFileInput(file: {
   name: string;
   size: number;
   type?: string;
 }): FileValidationResult {
-  if (!file.name.trim()) {
+  const trimmedName = file.name.trim();
+  if (!trimmedName || DISALLOWED_CONTROL_CHARS_RE.test(trimmedName) || trimmedName.length > 255) {
     return { valid: false, error: 'Selected file has an invalid filename.' };
   }
 
-  const lower = file.name.toLowerCase();
+  const lower = trimmedName.toLowerCase();
   const hasSupportedExt = SUPPORTED_VIDEO_EXTENSIONS.some((ext) => lower.endsWith(ext));
-  const mime = file.type?.toLowerCase();
-  const hasSupportedMime =
-    !mime ||
+  const mime = (file.type ?? '').trim().toLowerCase();
+
+  // Strictly reject mismatched non-video MIME types (for example HTML/JS disguised with .mp4)
+  const hasAcceptableMime =
+    mime === '' ||
+    mime === 'application/octet-stream' ||
     SUPPORTED_VIDEO_MIME_TYPES.some((allowed) => allowed === mime) ||
     mime.startsWith('video/');
 
-  if (!hasSupportedExt && !hasSupportedMime) {
+  if (mime && !hasAcceptableMime) {
     return {
       valid: false,
-      error: 'Unsupported format. Please select an MP4, MOV, MKV, or WEBM video file.',
+      error: `MIME type "${mime}" is not a supported video media type.`,
     };
   }
 
   if (!hasSupportedExt) {
     return {
       valid: false,
-      error: 'Unsupported file extension. Supported formats: MP4, MOV, MKV, WEBM.',
+      error: 'Unsupported format. Please select an MP4, MOV, MKV, or WEBM video file.',
     };
   }
 
@@ -68,6 +130,17 @@ export function classifyAndValidateVideoUrl(rawUrl: string): UrlValidationResult
     };
   }
 
+  if (trimmed.length > 2048 || DISALLOWED_CONTROL_CHARS_RE.test(trimmed)) {
+    return {
+      valid: false,
+      canAutoDownload: false,
+      category: 'invalid',
+      hostname: null,
+      detectedFilename: null,
+      message: 'URL exceeds the 2,048-character limit or contains unsupported characters.',
+    };
+  }
+
   let parsed: URL;
   try {
     parsed = new URL(trimmed);
@@ -93,7 +166,30 @@ export function classifyAndValidateVideoUrl(rawUrl: string): UrlValidationResult
     };
   }
 
+  if (parsed.username || parsed.password) {
+    return {
+      valid: false,
+      canAutoDownload: false,
+      category: 'invalid',
+      hostname: parsed.hostname,
+      detectedFilename: null,
+      message: 'URLs containing embedded usernames or passwords are not permitted.',
+    };
+  }
+
   const hostname = parsed.hostname.toLowerCase();
+
+  if (isPrivateOrInternalHost(hostname)) {
+    return {
+      valid: false,
+      canAutoDownload: false,
+      category: 'invalid',
+      hostname,
+      detectedFilename: null,
+      message: 'Private, loopback, and internal network hosts cannot be fetched via Video URL.',
+    };
+  }
+
   const pathname = parsed.pathname;
   const segments = pathname.split('/').filter(Boolean);
   const lastSegment = segments[segments.length - 1] ?? null;
@@ -162,13 +258,26 @@ export interface ConfigValidationErrors {
   durationRange?: string;
 }
 
+export function validateProjectNameValue(rawName: string): string | undefined {
+  const trimmed = rawName.trim();
+  if (!trimmed) {
+    return 'Project name is required.';
+  }
+  if (DISALLOWED_CONTROL_CHARS_RE.test(trimmed)) {
+    return 'Project name contains unsupported control characters.';
+  }
+  if (trimmed.length > 120) {
+    return 'Project name must be 120 characters or fewer.';
+  }
+  return undefined;
+}
+
 export function validateProcessingConfig(config: ProcessingConfig): ConfigValidationErrors {
   const errors: ConfigValidationErrors = {};
 
-  if (!config.projectName.trim()) {
-    errors.projectName = 'Project name is required.';
-  } else if (config.projectName.trim().length > 120) {
-    errors.projectName = 'Project name must be 120 characters or fewer.';
+  const nameError = validateProjectNameValue(config.projectName);
+  if (nameError) {
+    errors.projectName = nameError;
   }
 
   if (!Number.isInteger(config.desiredClipCount) || config.desiredClipCount < 1 || config.desiredClipCount > 30) {

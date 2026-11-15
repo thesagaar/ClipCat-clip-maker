@@ -19,6 +19,12 @@ const imgSizeClasses: Record<NonNullable<SdpLogoProps['size']>, string> = {
   md: 'h-8 w-auto',
 };
 
+const imgDimensions: Record<NonNullable<SdpLogoProps['size']>, { w: number; h: number }> = {
+  xs: { w: 20, h: 16 },
+  sm: { w: 25, h: 20 },
+  md: { w: 39, h: 32 },
+};
+
 /**
  * Displays the untouched Single Dimension Projects (SDP) official logo asset
  * inside a neutral dark container so the white mark remains legible across both
@@ -26,6 +32,7 @@ const imgSizeClasses: Record<NonNullable<SdpLogoProps['size']>, string> = {
  */
 export function SdpLogo({ size = 'sm', className }: SdpLogoProps) {
   const [fallbackPng, setFallbackPng] = useState(false);
+  const { w, h } = imgDimensions[size];
 
   return (
     <span
@@ -35,14 +42,31 @@ export function SdpLogo({ size = 'sm', className }: SdpLogoProps) {
         className
       )}
     >
-      <img
-        src={fallbackPng ? BRAND.assets.sdpLogoPng : BRAND.assets.sdpLogo}
-        alt={`${BRAND.parentBrandName} (${BRAND.parentBrandAbbreviation})`}
-        onError={() => {
-          if (!fallbackPng) setFallbackPng(true);
-        }}
-        className={cn('object-contain aspect-[785/640]', imgSizeClasses[size])}
-      />
+      {fallbackPng ? (
+        <picture className="contents">
+          <source srcSet={BRAND.assets.sdpLogoWebp} type="image/webp" />
+          <img
+            src={BRAND.assets.sdpLogoPng}
+            alt={`${BRAND.parentBrandName} (${BRAND.parentBrandAbbreviation})`}
+            width={w}
+            height={h}
+            loading="eager"
+            decoding="async"
+            className={cn('object-contain aspect-[785/640]', imgSizeClasses[size])}
+          />
+        </picture>
+      ) : (
+        <img
+          src={BRAND.assets.sdpLogo}
+          alt={`${BRAND.parentBrandName} (${BRAND.parentBrandAbbreviation})`}
+          width={w}
+          height={h}
+          loading="eager"
+          decoding="async"
+          onError={() => setFallbackPng(true)}
+          className={cn('object-contain aspect-[785/640]', imgSizeClasses[size])}
+        />
+      )}
     </span>
   );
 }

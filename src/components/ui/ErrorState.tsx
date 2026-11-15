@@ -4,6 +4,7 @@ import { ApiClientError } from '../../api/errors';
 import { BRAND } from '../../config/brand';
 import { ENV } from '../../config/env';
 import { Button } from './Button';
+import { OptimizedImage } from './OptimizedImage';
 
 interface ErrorStateProps {
   error: unknown;
@@ -35,9 +36,11 @@ export function ErrorState({
     >
       {showMascot && !imgError ? (
         <div className="w-12 h-12 rounded-xl bg-[#30194E]/35 border border-[var(--ios-red-border)] p-1 flex items-center justify-center shrink-0 overflow-hidden">
-          <img
+          <OptimizedImage
             src={BRAND.assets.clipcatIcon}
-            alt="ClipCat mascot logo"
+            webpSrc={BRAND.assets.clipcatIconWebp}
+            alt=""
+            aria-hidden="true"
             width={40}
             height={40}
             loading="lazy"
