@@ -5,10 +5,13 @@ import {
   Download,
   Film,
   Maximize2,
+  Minus,
   Pause,
   Play,
+  Plus,
   RefreshCw,
   Save,
+  SlidersHorizontal,
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -17,6 +20,7 @@ import {
   getClipDownloadUrl,
   getClipPreviewUrl,
 } from '../api';
+import { BottomSheet } from '../components/ui/BottomSheet';
 import { Button } from '../components/ui/Button';
 import { ErrorState } from '../components/ui/ErrorState';
 import { Input } from '../components/ui/Input';
@@ -78,6 +82,7 @@ export function ClipEditorPage() {
   const [muted, setMuted] = useState(false);
   const [videoUnavailable, setVideoUnavailable] = useState(false);
   const [trimError, setTrimError] = useState<string | null>(null);
+  const [advancedSheetOpen, setAdvancedSheetOpen] = useState(false);
 
   const clip = clipQuery.data;
   const presets = presetsQuery.data ?? DEFAULT_CAPTION_PRESETS;
@@ -266,23 +271,29 @@ export function ClipEditorPage() {
   return (
     <div className="space-y-5">
       {/* Top Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3 min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 min-w-0">
           <Link to={`/projects/${clip.projectId}/clips`}>
             <Button variant="secondary" size="sm" icon={<ArrowLeft className="w-4 h-4" />}>
-              Back to Clips
+              Back
             </Button>
           </Link>
+          <span className="xl:hidden font-display text-sm font-bold text-ios-label truncate max-w-[160px] sm:max-w-xs">
+            {title || clip.title}
+          </span>
           <StatusIndicator status={clip.status} />
-          {isDirty && (
+          {isDirty ? (
             <span className="text-xs text-ios-orange font-medium">Unsaved edits</span>
+          ) : (
+            <span className="text-xs text-ios-secondary">Saved</span>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           <Button
             variant="secondary"
             size="sm"
+            className="flex-1 sm:flex-initial"
             loading={updateClipMutation.isPending}
             icon={<Save className="w-3.5 h-3.5" />}
             onClick={handleSaveMetadata}
@@ -292,13 +303,16 @@ export function ClipEditorPage() {
           <Button
             variant="secondary"
             size="sm"
+            className="hidden sm:inline-flex"
             icon={<Download className="w-3.5 h-3.5" />}
             onClick={handleDownload}
           >
             Download
           </Button>
           <Button
+            variant="accent-purple"
             size="sm"
+            className="flex-1 sm:flex-initial"
             loading={renderClipMutation.isPending}
             icon={<RefreshCw className="w-3.5 h-3.5" />}
             onClick={handleRerender}
@@ -308,10 +322,10 @@ export function ClipEditorPage() {
         </div>
       </div>
 
-      {/* 3-Column Studio Editor */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        {/* LEFT: Clip Info & AI Scoring Breakdown */}
-        <section className="xl:col-span-3 min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-5 space-y-5">
+      {/* 3-Column Studio Editor (Preview ordered first on mobile) */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6 items-start">
+        {/* LEFT (3rd on mobile): Clip Info & AI Scoring Breakdown */}
+        <section className="order-3 xl:order-1 xl:col-span-3 min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-4 sm:p-5 space-y-5">
           <div className="space-y-3">
             <h2 className="font-display text-base font-bold text-ios-label">
               Clip Information
@@ -390,8 +404,8 @@ export function ClipEditorPage() {
           </div>
         </section>
 
-        {/* CENTER: Real HTML5 Video Preview & Transport Controls */}
-        <section className="xl:col-span-5 min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-5 space-y-4">
+        {/* CENTER (1st on mobile): Real HTML5 Video Preview & Transport Controls */}
+        <section className="order-1 xl:order-2 xl:col-span-5 min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-4 sm:p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-base font-bold text-ios-label">
               Video Preview
@@ -495,7 +509,7 @@ export function ClipEditorPage() {
                   onClick={handleToggleMute}
                   disabled={videoUnavailable}
                   aria-label={muted ? 'Unmute audio' : 'Mute audio'}
-                  className="p-2 rounded-lg bg-ios-tertiary border border-ios-sep text-ios-label disabled:opacity-40 cursor-pointer"
+                  className="min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 p-2 rounded-lg bg-ios-tertiary border border-ios-sep text-ios-label disabled:opacity-40 cursor-pointer flex items-center justify-center"
                 >
                   {muted ? (
                     <VolumeX className="w-4 h-4" />
@@ -512,7 +526,7 @@ export function ClipEditorPage() {
                   value={muted ? 0 : volume}
                   disabled={videoUnavailable}
                   onChange={(e) => handleVolumeChange(Number(e.target.value))}
-                  className="w-20 accent-ios-blue-fill cursor-pointer disabled:opacity-40"
+                  className="w-16 sm:w-20 accent-ios-blue-fill cursor-pointer disabled:opacity-40"
                 />
               </div>
 
@@ -522,7 +536,7 @@ export function ClipEditorPage() {
                   value={playbackSpeed}
                   disabled={videoUnavailable}
                   onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                  className="h-8 rounded-lg bg-ios-input border border-ios-sep px-2 text-xs font-mono text-ios-label disabled:opacity-40"
+                  className="h-11 sm:h-8 rounded-lg bg-ios-input border border-ios-sep px-2 text-xs font-mono text-ios-label disabled:opacity-40"
                 >
                   <option value={0.5}>0.5x</option>
                   <option value={1}>1.0x</option>
@@ -535,7 +549,7 @@ export function ClipEditorPage() {
                   onClick={handleFullscreen}
                   disabled={videoUnavailable}
                   aria-label="Fullscreen preview"
-                  className="p-2 rounded-lg bg-ios-tertiary border border-ios-sep text-ios-label disabled:opacity-40 cursor-pointer"
+                  className="min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 p-2 rounded-lg bg-ios-tertiary border border-ios-sep text-ios-label disabled:opacity-40 cursor-pointer flex items-center justify-center"
                 >
                   <Maximize2 className="w-4 h-4" />
                 </button>
@@ -544,29 +558,78 @@ export function ClipEditorPage() {
           </div>
         </section>
 
-        {/* RIGHT: Trim, Caption, Layout & Export Controls */}
-        <section className="xl:col-span-4 min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-5 space-y-6">
+        {/* RIGHT (2nd on mobile): Trim, Caption, Layout & Export Controls */}
+        <section className="order-2 xl:order-3 xl:col-span-4 min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-4 sm:p-5 space-y-6">
           <div className="space-y-3">
-            <h2 className="font-display text-base font-bold text-ios-label">
-              Trim Timing (seconds)
-            </h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-display text-base font-bold text-ios-label">
+                Trim Timing (seconds)
+              </h2>
+              <span className="text-xs font-mono tabular-nums text-ios-secondary">
+                {formatDuration(Math.max(0, endSec - startSec))} clip
+              </span>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input
-                label="Clip Start (sec)"
-                type="number"
-                min={0}
-                step={0.5}
-                value={startSec}
-                onChange={(e) => updateFields({ startSec: Number(e.target.value) })}
-              />
-              <Input
-                label="Clip End (sec)"
-                type="number"
-                min={1}
-                step={0.5}
-                value={endSec}
-                onChange={(e) => updateFields({ endSec: Number(e.target.value) })}
-              />
+              <div className="space-y-1.5">
+                <Input
+                  label="Clip Start (sec)"
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={startSec}
+                  onChange={(e) => updateFields({ startSec: Number(e.target.value) })}
+                />
+                <div className="flex items-center gap-1.5 sm:hidden">
+                  <button
+                    type="button"
+                    aria-label="Trim start back 0.5 seconds"
+                    onClick={() => updateFields({ startSec: Math.max(0, startSec - 0.5) })}
+                    className="flex-1 min-h-[44px] rounded-lg bg-ios-bg border border-ios-sep text-xs font-mono text-ios-label flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                    <span>0.5s</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Trim start forward 0.5 seconds"
+                    onClick={() => updateFields({ startSec: startSec + 0.5 })}
+                    className="flex-1 min-h-[44px] rounded-lg bg-ios-bg border border-ios-sep text-xs font-mono text-ios-label flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>0.5s</span>
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Input
+                  label="Clip End (sec)"
+                  type="number"
+                  min={1}
+                  step={0.5}
+                  value={endSec}
+                  onChange={(e) => updateFields({ endSec: Number(e.target.value) })}
+                />
+                <div className="flex items-center gap-1.5 sm:hidden">
+                  <button
+                    type="button"
+                    aria-label="Trim end back 0.5 seconds"
+                    onClick={() => updateFields({ endSec: Math.max(1, endSec - 0.5) })}
+                    className="flex-1 min-h-[44px] rounded-lg bg-ios-bg border border-ios-sep text-xs font-mono text-ios-label flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                    <span>0.5s</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Trim end forward 0.5 seconds"
+                    onClick={() => updateFields({ endSec: endSec + 0.5 })}
+                    className="flex-1 min-h-[44px] rounded-lg bg-ios-bg border border-ios-sep text-xs font-mono text-ios-label flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>0.5s</span>
+                  </button>
+                </div>
+              </div>
             </div>
             {trimError && (
               <p role="alert" className="text-xs text-ios-red">
@@ -589,12 +652,51 @@ export function ClipEditorPage() {
                 !captionSettings.enabled ? 'opacity-50 pointer-events-none' : ''
               }`}
             >
-              <Select
-                label="Caption Style"
-                value={captionSettings.presetId}
-                onChange={(e) => updateCaptionSettings({ presetId: e.target.value })}
-                options={presets.map((p) => ({ value: p.id, label: p.name }))}
-              />
+              {/* Horizontally Scrollable Caption Preset Previews */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-medium text-ios-secondary">
+                  Preset Style (swipe to preview)
+                </span>
+                <div
+                  role="listbox"
+                  aria-label="Caption preset swatches"
+                  className="flex items-stretch gap-2.5 overflow-x-auto no-scrollbar pb-1 snap-x"
+                >
+                  {presets.map((preset) => {
+                    const selected = captionSettings.presetId === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        onClick={() =>
+                          updateCaptionSettings({
+                            presetId: preset.id,
+                            highlightColor: preset.highlightColor,
+                          })
+                        }
+                        className={`snap-start shrink-0 min-w-[116px] min-h-[56px] rounded-lg border px-3 py-2 text-left transition-colors cursor-pointer ${
+                          selected
+                            ? 'bg-[var(--ios-blue-tint)] border-ios-blue'
+                            : 'bg-ios-bg border-ios-sep hover:border-ios-sep-strong'
+                        }`}
+                      >
+                        <p
+                          className="text-sm font-extrabold tracking-tight leading-none"
+                          style={{ color: preset.highlightColor }}
+                        >
+                          Aa
+                        </p>
+                        <p className="text-[11px] font-medium text-ios-label mt-1.5 truncate max-w-[100px]">
+                          {preset.name}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Select
                   label="Font Size"
@@ -625,6 +727,52 @@ export function ClipEditorPage() {
                   ]}
                 />
               </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-ios-label">Highlight Colour</span>
+                  <span className="font-mono text-ios-secondary">
+                    {captionSettings.highlightColor ??
+                      presets.find((p) => p.id === captionSettings.presetId)?.highlightColor ??
+                      '#64D2FF'}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {[
+                    { hex: '#64D2FF', label: 'Electric Blue' },
+                    { hex: '#AF52DE', label: 'Lavender' },
+                    { hex: '#5856D6', label: 'Deep Purple' },
+                    { hex: '#FF9F0A', label: 'Warm Orange' },
+                    { hex: '#FFD60A', label: 'Bold Yellow' },
+                    { hex: '#30D158', label: 'Mint Green' },
+                  ].map((swatch) => {
+                    const activeColor =
+                      captionSettings.highlightColor ??
+                      presets.find((p) => p.id === captionSettings.presetId)?.highlightColor ??
+                      '#64D2FF';
+                    const isSelected = activeColor.toUpperCase() === swatch.hex;
+                    return (
+                      <button
+                        key={swatch.hex}
+                        type="button"
+                        aria-label={`Set caption highlight colour to ${swatch.label}`}
+                        aria-pressed={isSelected}
+                        title={swatch.label}
+                        onClick={() => updateCaptionSettings({ highlightColor: swatch.hex })}
+                        className={`min-w-[44px] min-h-[44px] sm:min-w-[34px] sm:min-h-[34px] rounded-lg border flex items-center justify-center cursor-pointer transition-transform active:scale-95 ${
+                          isSelected
+                            ? 'border-ios-label ring-2 ring-ios-blue/40 bg-ios-bg'
+                            : 'border-ios-sep bg-ios-bg hover:border-ios-sep-strong'
+                        }`}
+                      >
+                        <span
+                          className="w-5 h-5 rounded-full border border-white/20"
+                          style={{ backgroundColor: swatch.hex }}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <Toggle
                 checked={captionSettings.highlightKeywords}
                 onChange={(checked) =>
@@ -643,36 +791,107 @@ export function ClipEditorPage() {
           </div>
 
           <div className="pt-4 border-t border-ios-sep space-y-3">
-            <h3 className="font-display text-sm font-bold text-ios-label">
-              Layout & Export Settings
-            </h3>
-            <Select
-              label="Video Layout"
-              value={layoutMode}
-              onChange={(e) =>
-                updateFields({ layoutMode: e.target.value as VideoLayoutMode })
-              }
-              options={[
-                { value: 'smart_face_tracking', label: 'Smart Face Tracking' },
-                { value: 'center_crop', label: 'Center Crop' },
-                { value: 'blurred_background', label: 'Blurred Background' },
-                { value: 'split_screen', label: 'Split Screen' },
-              ]}
-            />
-            <Select
-              label="Output Resolution"
-              value={resolution}
-              onChange={(e) =>
-                updateFields({ resolution: e.target.value as OutputResolution })
-              }
-              options={[
-                { value: '1080p', label: '1080p MP4 (H.264)' },
-                { value: '720p', label: '720p MP4 (H.264)' },
-              ]}
-            />
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-display text-sm font-bold text-ios-label">
+                Layout &amp; Export Settings
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="sm:hidden"
+                icon={<SlidersHorizontal className="w-3.5 h-3.5" />}
+                onClick={() => setAdvancedSheetOpen(true)}
+              >
+                Sheet
+              </Button>
+            </div>
+            <div className="hidden sm:block space-y-3">
+              <Select
+                label="Video Layout"
+                value={layoutMode}
+                onChange={(e) =>
+                  updateFields({ layoutMode: e.target.value as VideoLayoutMode })
+                }
+                options={[
+                  { value: 'smart_face_tracking', label: 'Smart Face Tracking' },
+                  { value: 'center_crop', label: 'Center Crop' },
+                  { value: 'blurred_background', label: 'Blurred Background' },
+                  { value: 'split_screen', label: 'Split Screen' },
+                ]}
+              />
+              <Select
+                label="Output Resolution"
+                value={resolution}
+                onChange={(e) =>
+                  updateFields({ resolution: e.target.value as OutputResolution })
+                }
+                options={[
+                  { value: '1080p', label: '1080p MP4 (H.264)' },
+                  { value: '720p', label: '720p MP4 (H.264)' },
+                ]}
+              />
+            </div>
+            <div className="sm:hidden flex items-center justify-between rounded-lg bg-ios-bg border border-ios-sep p-3 text-xs">
+              <span className="text-ios-secondary">
+                {layoutMode.replace(/_/g, ' ')} · {resolution}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAdvancedSheetOpen(true)}
+                className="text-ios-blue font-medium cursor-pointer"
+              >
+                Edit
+              </button>
+            </div>
           </div>
         </section>
       </div>
+
+      {/* Mobile Bottom Sheet for Advanced Layout, Highlight Color & Download */}
+      <BottomSheet
+        open={advancedSheetOpen}
+        onClose={() => setAdvancedSheetOpen(false)}
+        title="Advanced Framing & Export"
+        description="Configure layout mode, output resolution, and direct download."
+        footer={
+          <Button className="w-full sm:w-auto" onClick={() => setAdvancedSheetOpen(false)}>
+            Done
+          </Button>
+        }
+      >
+        <Select
+          label="Video Layout"
+          value={layoutMode}
+          onChange={(e) =>
+            updateFields({ layoutMode: e.target.value as VideoLayoutMode })
+          }
+          options={[
+            { value: 'smart_face_tracking', label: 'Smart Face Tracking' },
+            { value: 'center_crop', label: 'Center Crop' },
+            { value: 'blurred_background', label: 'Blurred Background' },
+            { value: 'split_screen', label: 'Split Screen' },
+          ]}
+        />
+        <Select
+          label="Output Resolution"
+          value={resolution}
+          onChange={(e) =>
+            updateFields({ resolution: e.target.value as OutputResolution })
+          }
+          options={[
+            { value: '1080p', label: '1080p MP4 (H.264)' },
+            { value: '720p', label: '720p MP4 (H.264)' },
+          ]}
+        />
+        <Button
+          variant="secondary"
+          className="w-full"
+          icon={<Download className="w-4 h-4" />}
+          onClick={handleDownload}
+        >
+          Download Rendered MP4
+        </Button>
+      </BottomSheet>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { ENV } from '../config/env';
+import { ENV, getApiBaseUrl } from '../config/env';
 import {
   ApiClientError,
   extractErrorMessage,
@@ -39,7 +39,7 @@ export function isMockApiEnabled(): boolean {
 
 export function buildApiUrl(path: string): string {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${ENV.API_BASE_URL}${normalizedPath}`;
+  return `${getApiBaseUrl()}${normalizedPath}`;
 }
 
 export async function apiRequest<T>(

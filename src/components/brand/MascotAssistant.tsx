@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
+import { BRAND } from '../../config/brand';
 import { cn } from '../../utils/cn';
 
 interface MascotAssistantProps {
   message: string;
   submessage?: string;
   animate?: boolean;
+  showSdpAttribution?: boolean;
   className?: string;
 }
 
@@ -13,6 +15,7 @@ export function MascotAssistant({
   message,
   submessage,
   animate = false,
+  showSdpAttribution = false,
   className,
 }: MascotAssistantProps) {
   const [imgError, setImgError] = useState(false);
@@ -26,26 +29,33 @@ export function MascotAssistant({
     >
       <div
         className={cn(
-          'w-14 h-14 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 overflow-hidden border border-ios-sep',
-          animate && 'transition-transform duration-500'
+          'w-16 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden',
+          animate && 'animate-float-gentle'
         )}
       >
         {!imgError ? (
           <img
-            src="/brand/clipcat-mascot.png"
-            alt="ClipCat AI editing cat mascot"
+            src={BRAND.assets.clipcatMascot}
+            alt="ClipCat mascot logo"
+            width={64}
+            height={46}
             referrerPolicy="no-referrer"
             onError={() => setImgError(true)}
             className="w-full h-full object-contain"
           />
         ) : (
-          <Sparkles className="w-6 h-6 text-ios-blue" />
+          <Sparkles className="w-6 h-6 text-[#7040DC]" />
         )}
       </div>
       <div className="min-w-0">
         <p className="font-display text-sm font-bold text-ios-label">{message}</p>
         {submessage && (
           <p className="text-xs text-ios-secondary mt-1 leading-relaxed">{submessage}</p>
+        )}
+        {showSdpAttribution && (
+          <p className="text-[11px] text-ios-tertiary-label mt-1.5">
+            {BRAND.shortAttribution}
+          </p>
         )}
       </div>
     </div>

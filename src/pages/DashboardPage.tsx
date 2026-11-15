@@ -12,11 +12,14 @@ import {
   XCircle,
 } from 'lucide-react';
 import { MascotAssistant } from '../components/brand/MascotAssistant';
+import { SdpLogo } from '../components/brand/SdpLogo';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { Skeleton } from '../components/ui/Skeleton';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
+import { BRAND } from '../config/brand';
+import { MobileDashboardPage } from './MobileDashboardPage';
 import {
   useAllClipsQuery,
   useCancelJobMutation,
@@ -74,20 +77,50 @@ export function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Studio Hero Header */}
-      <section className="rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        <div className="space-y-2 max-w-2xl min-w-0">
-          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-ios-label text-balance">
-            Welcome to ClipCat
-          </h2>
+    <>
+      <div className="sm:hidden">
+        <MobileDashboardPage />
+      </div>
+
+      <div className="hidden sm:block space-y-8">
+        {/* Studio Hero Header */}
+        <section className="rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 sm:gap-6">
+        <div className="space-y-3 max-w-2xl min-w-0">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden animate-float-gentle">
+              <img
+                src={BRAND.assets.clipcatLogo}
+                alt="ClipCat mascot logo"
+                width={64}
+                height={64}
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="min-w-0 space-y-1">
+              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-ios-label text-balance">
+                Welcome to {BRAND.productName}
+              </h2>
+              <p className="text-xs sm:text-sm text-ios-secondary">
+                {BRAND.developedByStatement}
+              </p>
+            </div>
+          </div>
           <p className="text-sm sm:text-base text-ios-secondary">
             Turn your long videos into scroll-stopping moments. Local-first transcription, smart framing, and burned-in captions.
           </p>
+          <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs text-ios-tertiary-label">
+            <SdpLogo size="xs" />
+            <span>{BRAND.welcomeAttribution}</span>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <Link to="/projects/new">
-            <Button size="lg" icon={<Plus className="w-4 h-4" />}>
+          <Link to="/projects/new" className="w-full sm:w-auto">
+            <Button
+              variant="accent-purple"
+              size="lg"
+              className="w-full sm:w-auto"
+              icon={<Plus className="w-4 h-4" />}
+            >
               Create New Project
             </Button>
           </Link>
@@ -118,46 +151,46 @@ export function DashboardPage() {
       )}
 
       {/* Real Statistics (derived solely from backend data) */}
-      <section aria-label="Workspace statistics" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-5 space-y-1">
-          <p className="text-xs font-medium text-ios-secondary">Total Projects</p>
+      <section aria-label="Workspace statistics" className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+        <div className="min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-3.5 sm:p-5 space-y-1">
+          <p className="text-xs font-medium text-ios-secondary truncate">Total Projects</p>
           {projectsQuery.isLoading ? (
             <Skeleton className="h-8 w-20 mt-1" />
           ) : (
-            <p className="font-display text-2xl font-bold text-ios-label tabular-nums">
+            <p className="font-display text-xl sm:text-2xl font-bold text-ios-label tabular-nums">
               {projectsQuery.isError ? '—' : projects.length}
             </p>
           )}
         </div>
 
-        <div className="min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-5 space-y-1">
-          <p className="text-xs font-medium text-ios-secondary">Videos Processed</p>
+        <div className="min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-3.5 sm:p-5 space-y-1">
+          <p className="text-xs font-medium text-ios-secondary truncate">Videos Processed</p>
           {projectsQuery.isLoading ? (
             <Skeleton className="h-8 w-20 mt-1" />
           ) : (
-            <p className="font-display text-2xl font-bold text-ios-label tabular-nums">
+            <p className="font-display text-xl sm:text-2xl font-bold text-ios-label tabular-nums">
               {projectsQuery.isError ? '—' : completedProjects.length}
             </p>
           )}
         </div>
 
-        <div className="min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-5 space-y-1">
-          <p className="text-xs font-medium text-ios-secondary">Clips Generated</p>
+        <div className="min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-3.5 sm:p-5 space-y-1">
+          <p className="text-xs font-medium text-ios-secondary truncate">Clips Generated</p>
           {clipsQuery.isLoading ? (
             <Skeleton className="h-8 w-20 mt-1" />
           ) : (
-            <p className="font-display text-2xl font-bold text-ios-label tabular-nums">
+            <p className="font-display text-xl sm:text-2xl font-bold text-ios-label tabular-nums">
               {clipsQuery.isError ? '—' : clips.length}
             </p>
           )}
         </div>
 
-        <div className="min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-5 space-y-1">
-          <p className="text-xs font-medium text-ios-secondary">Total Processing Time</p>
+        <div className="min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-3.5 sm:p-5 space-y-1">
+          <p className="text-xs font-medium text-ios-secondary truncate">Processing Time</p>
           {projectsQuery.isLoading ? (
             <Skeleton className="h-8 w-24 mt-1" />
           ) : (
-            <p className="font-display text-2xl font-bold text-ios-label tabular-nums">
+            <p className="font-display text-xl sm:text-2xl font-bold text-ios-label tabular-nums">
               {projectsQuery.isError ? '—' : formatElapsedVerbose(totalProcessingTimeSec)}
             </p>
           )}
@@ -437,6 +470,7 @@ export function DashboardPage() {
           </div>
 
           <MascotAssistant
+            showSdpAttribution
             message="Getting Started with ClipCat"
             submessage="1. Upload an MP4, MOV, MKV, or WEBM video. 2. Choose 9:16 framing and a caption preset. 3. Review scored clips and export MP4 + SRT files."
           />
@@ -452,6 +486,7 @@ export function DashboardPage() {
           </div>
         </aside>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

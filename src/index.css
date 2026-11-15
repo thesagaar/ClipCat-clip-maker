@@ -180,3 +180,46 @@
     scroll-behavior: auto !important;
   }
 }
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+:root {
+  --mobile-nav-clearance: 5rem;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pb-mobile-nav-safe {
+  padding-bottom: calc(var(--mobile-nav-clearance) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 640px) {
+  .pb-mobile-nav-safe {
+    padding-bottom: 0px;
+  }
+}
+
+@keyframes clipcat-float-gentle {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-float-gentle {
+    animation: clipcat-float-gentle 3.8s ease-in-out infinite;
+  }
+}

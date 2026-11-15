@@ -37,6 +37,31 @@ This repository contains the complete production-grade React + TypeScript fronte
 
 ---
 
+## Product Ownership & Branding
+
+**ClipCat** is an AI-powered video clipping application developed under **Single Dimension Projects (SDP)**.
+
+- **Parent Brand**: Single Dimension Projects (SDP)
+- **Product Name**: ClipCat
+- **Product Category**: AI Video Clipping Studio
+- **Product Tagline**: *"Long videos. Short attention. Perfect clips."*
+- **Official Attribution**: *"ClipCat — A product by Single Dimension Projects"*
+- **Target Platforms**: Web and Windows Desktop (Tauri 2 ready)
+- **Local-First Architecture**: Speech transcription (Whisper), moment scoring, smart framing, and MP4/SRT rendering execute locally on your Python FastAPI backend (`VITE_API_BASE_URL` or runtime LAN IP configured in **Settings** for mobile devices).
+
+- **Website**: `https://single-dimension-projects.vercel.app` (overridable via `VITE_SDP_WEBSITE_URL`)
+- **Support**: `https://single-dimension-projects.vercel.app/contact` (overridable via `VITE_SDP_SUPPORT_URL`)
+
+### Brand Assets (`public/brand/` & `public/assets/aistudio/`)
+
+- `public/brand/sdp-logo.svg` / `public/brand/sdp-logo.png` (sourced from `public/assets/aistudio/sdp-logo-mark_5f38d36d.svg`) — Official Single Dimension Projects brand mark
+- `public/brand/clipcat-logo.png` — ClipCat primary product logo
+- `public/brand/clipcat-mascot.png` — ClipCat AI editing cat mascot
+- `public/brand/clipcat-icon.png` — Compact ClipCat app icon
+- `public/brand/favicon.ico` — Browser/desktop icon
+
+---
+
 ## Installation & Running Locally
 
 1. **Install dependencies**:
@@ -48,6 +73,10 @@ This repository contains the complete production-grade React + TypeScript fronte
    ```env
    VITE_API_BASE_URL=http://127.0.0.1:8000
    VITE_USE_MOCK_API=false
+   VITE_APP_VERSION=0.1.0
+   VITE_SDP_WEBSITE_URL=https://single-dimension-projects.vercel.app
+   VITE_SDP_SUPPORT_URL=https://single-dimension-projects.vercel.app/contact
+   VITE_SDP_SUPPORT_EMAIL=
    ```
 
 3. **Start the development server** (port `3000`):
@@ -65,7 +94,7 @@ This repository contains the complete production-grade React + TypeScript fronte
 
 ## Isolated Mock Adapter (Development Preview Only)
 
-By default (`VITE_USE_MOCK_API=false`), ClipCat communicates exclusively with your local FastAPI backend at `http://127.0.0.1:8000` and honestly reports offline/unavailable states when the backend is not running.
+By default (`VITE_USE_MOCK_API=false`), ClipCat communicates exclusively with your configured FastAPI backend (`http://127.0.0.1:8000` by default, or an explicit LAN IP configured in Settings for mobile devices) and honestly reports offline/unavailable states when the backend is not running.
 
 For isolated UI previewing without FastAPI running, set `VITE_USE_MOCK_API=true` (or click **Preview with Mock Sample Data** in the offline banner). An unmistakable top banner indicates whenever the Mock Adapter is active.
 

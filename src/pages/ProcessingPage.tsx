@@ -64,7 +64,7 @@ function StageRowIcon({ status }: { status: StageStatus }) {
     case 'completed':
       return <CheckCircle2 className="w-5 h-5 text-ios-green shrink-0" />;
     case 'running':
-      return <Loader2 className="w-5 h-5 text-ios-blue animate-spin shrink-0" />;
+      return <Loader2 className="w-5 h-5 text-ios-blue motion-safe:animate-spin shrink-0" />;
     case 'failed':
       return <XCircle className="w-5 h-5 text-ios-red shrink-0" />;
     case 'cancelled':
@@ -247,7 +247,7 @@ export function ProcessingPage() {
                 style={{ width: `${Math.min(100, Math.max(0, job.overallProgress))}%` }}
               />
             ) : job?.status === 'running' || job?.status === 'queued' ? (
-              <div className="h-full w-1/3 bg-ios-blue animate-pulse rounded-full" />
+              <div className="h-full w-1/3 bg-ios-blue motion-safe:animate-pulse rounded-full" />
             ) : null}
           </div>
         </div>
@@ -274,9 +274,19 @@ export function ProcessingPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Animated Mascot (ordered first on mobile, top-right on desktop) */}
+        <div className="min-w-0 lg:col-start-3 lg:row-start-1">
+          <MascotAssistant
+            showSdpAttribution
+            animate={job?.status === 'running'}
+            message={getMascotMessageForStage(job?.currentStageId ?? null, job?.status)}
+            submessage="ClipCat polls FastAPI telemetry every 2 seconds. You can safely navigate elsewhere—processing continues on your backend."
+          />
+        </div>
+
         {/* 10-Stage Vertical Pipeline */}
-        <section className="lg:col-span-2 min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-4">
+        <section className="lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:row-span-2 min-w-0 rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-base font-bold text-ios-label">
               Processing Pipeline
@@ -284,7 +294,7 @@ export function ProcessingPage() {
             <button
               type="button"
               onClick={() => jobQuery.refetch()}
-              className="inline-flex items-center gap-1.5 text-xs text-ios-secondary hover:text-ios-label cursor-pointer"
+              className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 px-2 inline-flex items-center justify-center gap-1.5 text-xs text-ios-secondary hover:text-ios-label cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh</span>
@@ -328,14 +338,8 @@ export function ProcessingPage() {
           </ol>
         </section>
 
-        {/* Mascot + Processing Logs */}
-        <aside className="min-w-0 space-y-6">
-          <MascotAssistant
-            animate={job?.status === 'running'}
-            message={getMascotMessageForStage(job?.currentStageId ?? null, job?.status)}
-            submessage="ClipCat polls real FastAPI job telemetry every 2 seconds and resumes cleanly if you reload."
-          />
-
+        {/* Processing Logs */}
+        <aside className="min-w-0 lg:col-start-3 lg:row-start-2">
           <div className="rounded-xl bg-ios-surface border border-ios-sep p-5 space-y-3">
             <h3 className="font-display text-base font-bold text-ios-label">
               Processing Logs

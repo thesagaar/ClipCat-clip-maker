@@ -12,6 +12,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { batchExportClips, getProjectClips } from '../api';
+import { PullToRefresh } from '../components/mobile/PullToRefresh';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -136,7 +137,8 @@ export function ProjectsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <PullToRefresh onRefresh={() => projectsQuery.refetch()}>
+      <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
           <h2 className="font-display text-2xl font-bold text-ios-label">
@@ -451,6 +453,7 @@ export function ProjectsPage() {
         danger
         loading={deleteMutation.isPending}
       />
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }

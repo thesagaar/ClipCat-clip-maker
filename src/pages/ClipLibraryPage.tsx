@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, Film, Plus, Search } from 'lucide-react';
+import { Download, Film, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { batchExportClips, getClipDownloadUrl } from '../api';
 import { ClipCard } from '../components/clips/ClipCard';
+import { BottomSheet } from '../components/ui/BottomSheet';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -35,6 +36,7 @@ export function ClipLibraryPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [clipToDelete, setClipToDelete] = useState<Clip | null>(null);
   const [rerenderingId, setRerenderingId] = useState<string | null>(null);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const clips = clipsQuery.data ?? [];
   const filteredClips = useMemo(
@@ -178,7 +180,18 @@ export function ClipLibraryPage() {
             </Button>
           )}
 
-          <div className="w-full sm:w-44">
+          {/* Mobile BottomSheet Trigger */}
+          <Button
+            variant="secondary"
+            size="sm"
+            className="sm:hidden"
+            icon={<SlidersHorizontal className="w-4 h-4" />}
+            onClick={() => setFilterSheetOpen(true)}
+          >
+            Filter &amp; Sort
+          </Button>
+
+          <div className="hidden sm:block w-44">
             <Select
               aria-label="Filter clips by status"
               value={statusFilter}
@@ -192,7 +205,7 @@ export function ClipLibraryPage() {
             />
           </div>
 
-          <div className="w-full sm:w-48">
+          <div className="hidden sm:block w-48">
             <Select
               aria-label="Sort clips"
               value={sortBy}
@@ -209,7 +222,7 @@ export function ClipLibraryPage() {
       </div>
 
       {clipsQuery.isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 min-[410px]:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
@@ -226,7 +239,7 @@ export function ClipLibraryPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 min-[410px]:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
           {filteredClips.map((clip) => (
             <ClipCard
               key={clip.id}
@@ -241,6 +254,51 @@ export function ClipLibraryPage() {
           ))}
         </div>
       )}
+
+      <BottomSheet
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        title="Filter & Sort Clips"
+        description="Narrow or order generated clips."
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setStatusFilter('all');
+                setSortBy('highest_score');
+                setFilterSheetOpen(false);
+              }}
+            >
+              Reset
+            </Button>
+            <Button onClick={() => setFilterSheetOpen(false)}>Done</Button>
+          </>
+        }
+      >
+        <Select
+          label="Clip Status"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as ClipFilterOption)}
+          options={[
+            { value: 'all', label: 'All Clips' },
+            { value: 'completed', label: 'Completed' },
+            { value: 'needs_attention', label: 'Needs Attention' },
+            { value: 'failed', label: 'Failed' },
+          ]}
+        />
+        <Select
+          label="Sort Order"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as ClipSortOption)}
+          options={[
+            { value: 'highest_score', label: 'Highest AI Score' },
+            { value: 'newest', label: 'Newest First' },
+            { value: 'shortest', label: 'Shortest Duration' },
+            { value: 'longest', label: 'Longest Duration' },
+          ]}
+        />
+      </BottomSheet>
 
       <ConfirmDialog
         open={Boolean(clipToDelete)}

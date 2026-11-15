@@ -15,6 +15,7 @@ import {
   startProjectProcessing,
   uploadProjectVideo,
 } from '../api';
+import { MascotAssistant } from '../components/brand/MascotAssistant';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { ProcessingConfigPanel } from '../features/new-project/ProcessingConfigPanel';
@@ -221,13 +222,20 @@ export function NewProjectPage() {
 
   return (
     <div className="space-y-8 w-full">
-      <div className="space-y-1">
-        <h2 className="font-display text-2xl font-bold text-ios-label">
-          Create New Video Project
-        </h2>
-        <p className="text-sm text-ios-secondary">
-          Add a long-form video from your computer or a direct media URL, then configure AI clipping.
-        </p>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h2 className="font-display text-2xl font-bold text-ios-label">
+            Create New Video Project
+          </h2>
+          <p className="text-sm text-ios-secondary">
+            Add a long-form video from your computer or a direct media URL, then configure AI clipping.
+          </p>
+        </div>
+        <MascotAssistant
+          message="Ready for your next cut"
+          submessage="Local Whisper transcription + smart 9:16 framing stay on your device."
+          className="lg:max-w-sm py-3 px-3.5"
+        />
       </div>
 
       {/* Input Mode Tabs */}
@@ -507,30 +515,32 @@ export function NewProjectPage() {
       />
 
       {/* Summary & Primary CTA */}
-      <section className="rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <section className="sticky bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] sm:static z-20 rounded-xl bg-ios-surface/95 backdrop-blur-md border border-ios-sep p-4 sm:p-6 space-y-3 sm:space-y-4 shadow-lg sm:shadow-none">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
           <div className="space-y-1 min-w-0">
-            <h3 className="font-display text-base font-bold text-ios-label">
+            <h3 className="font-display text-sm sm:text-base font-bold text-ios-label">
               Ready to Start Clipping
             </h3>
-            <p className="text-xs text-ios-secondary tabular-nums">
-              {config.desiredClipCount} target clips · {config.minDurationSec}–{config.maxDurationSec}s duration · {config.aspectRatio} · {config.layoutMode.replace(/_/g, ' ')} ·{' '}
+            <p className="text-xs text-ios-secondary tabular-nums line-clamp-2 sm:line-clamp-none">
+              {config.desiredClipCount} target clips · {config.minDurationSec}–{config.maxDurationSec}s · {config.aspectRatio} · {config.layoutMode.replace(/_/g, ' ')} ·{' '}
               {config.captionsEnabled ? `Captions (${config.captionPresetId})` : 'No captions'} ·{' '}
-              {config.outputResolution} MP4 ({config.outputFps} FPS) ·{' '}
-              {config.autoProcess ? 'Fully Automatic' : 'Manual Review'}
+              {config.outputResolution} MP4
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             {isSubmitting && uploadAbortRef.current && (
               <Button
                 variant="danger"
+                className="flex-1 sm:flex-initial"
                 onClick={() => uploadAbortRef.current?.abort()}
               >
                 Abort Upload
               </Button>
             )}
             <Button
+              variant="accent-purple"
               size="lg"
+              className="w-full sm:w-auto"
               loading={isSubmitting}
               disabled={!hasValidSource && inputMode === 'url'}
               icon={<Play className="w-4 h-4" />}

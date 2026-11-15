@@ -29,6 +29,7 @@ export interface ClipCaptionOverride {
   presetId: string;
   fontSize: CaptionFontSizeOption;
   position: CaptionPositionOption;
+  highlightColor?: string;
   highlightKeywords: boolean;
   wordByWordAnimation: boolean;
   speakerLabels: boolean;

@@ -36,7 +36,13 @@ export function ClipCard({
   return (
     <article className="min-w-0 rounded-xl bg-ios-surface border border-ios-sep overflow-hidden flex flex-col justify-between">
       {/* Thumbnail Preview */}
-      <div className="relative aspect-[16/10] bg-ios-bg border-b border-ios-sep flex items-center justify-center overflow-hidden">
+      <div
+        className={`relative bg-ios-bg border-b border-ios-sep flex items-center justify-center overflow-hidden ${
+          clip.aspectRatio === '9:16'
+            ? 'aspect-[3/4] sm:aspect-[16/10]'
+            : 'aspect-[16/10]'
+        }`}
+      >
         {clip.thumbnailUrl ? (
           <img
             src={clip.thumbnailUrl}
@@ -60,7 +66,7 @@ export function ClipCard({
           onClick={() => onToggleSelect(clip.id)}
           aria-label={selected ? `Deselect ${clip.title}` : `Select ${clip.title}`}
           aria-pressed={selected}
-          className="absolute top-2.5 left-2.5 p-1.5 rounded-lg bg-black/75 backdrop-blur-md border border-white/15 text-white hover:border-ios-blue cursor-pointer"
+          className="absolute top-2 left-2 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 p-2 sm:p-1.5 rounded-lg bg-black/75 backdrop-blur-md border border-white/15 text-white hover:border-ios-blue flex items-center justify-center cursor-pointer"
         >
           {selected ? (
             <CheckSquare className="w-4 h-4 text-ios-blue" />

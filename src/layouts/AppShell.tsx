@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { motion } from 'motion/react';
 import { setRuntimeMockMode } from '../api/client';
 import {
   Activity,
@@ -20,10 +21,15 @@ import {
   X,
 } from 'lucide-react';
 import { ClipCatLogo } from '../components/brand/ClipCatLogo';
+import { SdpLogo } from '../components/brand/SdpLogo';
+import { Footer } from '../components/layout/Footer';
+import { MobileBottomNav } from '../components/navigation/MobileBottomNav';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
 import { ToastContainer } from '../components/ui/ToastContainer';
-import { ENV } from '../config/env';
+import { BRAND } from '../config/brand';
+import { getApiBaseUrl } from '../config/env';
 import { useSystemHealthQuery, useSystemStorageQuery } from '../hooks/useClipCatQueries';
+import { useSwipeNavigation } from '../hooks/useMobileGestures';
 import { useUiStore } from '../stores/uiStore';
 import { cn } from '../utils/cn';
 import { getRuntimeEnvironmentLabel } from '../utils/desktop';
@@ -164,6 +170,7 @@ export function AppShell() {
   const [notifOpen, setNotifOpen] = useState(false);
   const queryClient = useQueryClient();
   const prevMockRef = useRef(mockModeEnabled);
+  const { bind: bindSwipe, dragOffsetX, isSwiping, canSwipe } = useSwipeNavigation();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -209,23 +216,30 @@ export function AppShell() {
     document.title = `${pageMeta.title} — ClipCat`;
   }, [pageMeta.title]);
 
-  const renderNavSection = (heading: string, items: NavItem[]) => (
+  const renderNavSection = (heading: string, items: NavItem[], inDrawer = false) => (
     <div className="space-y-1">
-      {!sidebarCollapsed && (
+      {inDrawer ? (
         <p className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-ios-tertiary-label">
           {heading}
         </p>
+      ) : (
+        !sidebarCollapsed && (
+          <p className="hidden lg:block px-3 pb-1 text-[11px] font-semibold tracking-wider text-ios-tertiary-label">
+            {heading}
+          </p>
+        )
       )}
       {items.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
           end={item.end}
-          title={sidebarCollapsed ? item.label : undefined}
+          title={!inDrawer ? item.label : undefined}
           className={({ isActive }) =>
             cn(
               'group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 whitespace-nowrap',
-              sidebarCollapsed && 'justify-center px-2',
+              !inDrawer && 'justify-center px-2 lg:justify-start lg:px-3',
+              !inDrawer && sidebarCollapsed && 'lg:justify-center lg:px-2',
               isActive
                 ? 'bg-[var(--ios-blue-tint)] text-ios-blue border border-[var(--ios-blue-border)]'
                 : 'text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary border border-transparent'
@@ -235,7 +249,11 @@ export function AppShell() {
           <span className="shrink-0" aria-hidden="true">
             {item.icon}
           </span>
-          {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+          {inDrawer ? (
+            <span className="truncate">{item.label}</span>
+          ) : (
+            !sidebarCollapsed && <span className="hidden lg:inline truncate">{item.label}</span>
+          )}
         </NavLink>
       ))}
     </div>
@@ -243,22 +261,31 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-ios-bg text-ios-label flex overflow-x-hidden">
-      {/* Desktop Sidebar */}
+      {/* Responsive Desktop & Tablet Sidebar (hidden below 640px) */}
       <aside
         aria-label="Primary navigation"
         className={cn(
-          'hidden lg:flex flex-col shrink-0 bg-ios-surface border-r border-ios-sep transition-all duration-200 sticky top-0 h-screen',
-          sidebarCollapsed ? 'w-[72px]' : 'w-[248px]'
+          'hidden sm:flex flex-col shrink-0 bg-ios-surface border-r border-ios-sep transition-all duration-200 sticky top-0 h-screen',
+          sidebarCollapsed ? 'w-[72px]' : 'w-[72px] lg:w-[248px]'
         )}
       >
         <div
           className={cn(
-            'h-16 flex items-center border-b border-ios-sep px-4',
-            sidebarCollapsed ? 'justify-center' : 'justify-between'
+            'h-16 flex items-center border-b border-ios-sep px-3 lg:px-4 justify-center',
+            !sidebarCollapsed && 'lg:justify-between'
           )}
         >
-          <Link to="/" aria-label="ClipCat Home" className="min-w-0">
-            <ClipCatLogo collapsed={sidebarCollapsed} />
+          <Link to="/" aria-label="ClipCat Home" className="min-w-0 flex items-center">
+            <span className="lg:hidden">
+              <ClipCatLogo collapsed />
+            </span>
+            <span className="hidden lg:inline-flex">
+              <ClipCatLogo
+                collapsed={sidebarCollapsed}
+                showSubtitle={!sidebarCollapsed}
+                showSdpAttribution
+              />
+            </span>
           </Link>
         </div>
 
@@ -268,13 +295,13 @@ export function AppShell() {
           {renderNavSection('SYSTEM', systemNav)}
         </nav>
 
-        <div className="border-t border-ios-sep p-3 space-y-2">
+        <div className="border-t border-ios-sep p-3 space-y-2.5">
           {!sidebarCollapsed && (
-            <div className="px-2.5 py-2 rounded-lg bg-ios-bg border border-ios-sep text-xs space-y-1">
+            <div className="hidden lg:block px-2.5 py-2 rounded-lg bg-ios-bg border border-ios-sep text-xs space-y-1">
               <div className="flex items-center justify-between text-ios-secondary">
                 <span>Local Engine</span>
                 <span className="font-mono tabular-nums text-ios-label">
-                  v{ENV.APP_VERSION}
+                  v{BRAND.version}
                 </span>
               </div>
               <p className="text-[11px] text-ios-secondary truncate">
@@ -282,13 +309,36 @@ export function AppShell() {
               </p>
             </div>
           )}
+
+          {/* Subtle SDP Parent Brand Attribution in Sidebar Footer */}
+          <Link
+            to="/settings#about"
+            title={BRAND.developedByStatement}
+            className={cn(
+              'flex items-center gap-2.5 px-1 lg:px-2 py-1.5 rounded-lg hover:bg-ios-tertiary/60 transition-colors justify-center',
+              !sidebarCollapsed && 'lg:justify-start'
+            )}
+          >
+            <SdpLogo size="xs" />
+            {!sidebarCollapsed && (
+              <div className="hidden lg:block min-w-0">
+                <p className="text-[11px] font-medium text-ios-secondary">
+                  {BRAND.shortAttribution}
+                </p>
+                <p className="text-[11px] text-ios-tertiary-label leading-snug">
+                  {BRAND.parentBrandName}
+                </p>
+              </div>
+            )}
+          </Link>
+
           <button
             type="button"
             onClick={toggleSidebar}
             aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             className={cn(
-              'w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary transition-colors cursor-pointer',
+              'hidden lg:flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary transition-colors cursor-pointer',
               sidebarCollapsed && 'justify-center px-2'
             )}
           >
@@ -304,9 +354,9 @@ export function AppShell() {
         </div>
       </aside>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (< 640px, for secondary pages) */}
       {mobileNavOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
+        <div className="fixed inset-0 z-50 sm:hidden flex">
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-xs"
             onClick={() => setMobileNavOpen(false)}
@@ -317,27 +367,40 @@ export function AppShell() {
             className="relative z-10 w-64 max-w-[85vw] bg-ios-surface border-r border-ios-sep flex flex-col h-full"
           >
             <div className="h-16 flex items-center justify-between px-4 border-b border-ios-sep">
-              <ClipCatLogo />
+              <Link to="/" aria-label="ClipCat Home" className="min-w-0 flex items-center">
+                <ClipCatLogo showSubtitle showSdpAttribution />
+              </Link>
               <button
                 type="button"
                 onClick={() => setMobileNavOpen(false)}
                 aria-label="Close navigation menu"
-                className="p-2 rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary cursor-pointer"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <nav className="flex-1 overflow-y-auto px-3 py-5 space-y-6">
-              {renderNavSection('WORKSPACE', workspaceNav)}
-              {renderNavSection('CREATIVE', creativeNav)}
-              {renderNavSection('SYSTEM', systemNav)}
+              {renderNavSection('WORKSPACE', workspaceNav, true)}
+              {renderNavSection('CREATIVE', creativeNav, true)}
+              {renderNavSection('SYSTEM', systemNav, true)}
             </nav>
+            <div className="border-t border-ios-sep p-4 flex items-center gap-2.5">
+              <SdpLogo size="xs" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium text-ios-secondary">
+                  {BRAND.shortAttribution}
+                </p>
+                <p className="text-[11px] text-ios-tertiary-label leading-snug">
+                  {BRAND.parentBrandName}
+                </p>
+              </div>
+            </div>
           </aside>
         </div>
       )}
 
-      {/* Main Content Column */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      {/* Main Content Column (global mobile bottom nav + safe-area inset clearance) */}
+      <div className="flex-1 min-w-0 flex flex-col pb-mobile-nav-safe">
         {/* Explicit Mock Mode Notice (never silent) */}
         {mockModeEnabled && (
           <div
@@ -350,24 +413,35 @@ export function AppShell() {
             <button
               type="button"
               onClick={() => setMockModeEnabled(false)}
-              className="px-2.5 py-1 rounded-md bg-ios-tertiary text-ios-label border border-ios-sep hover:border-ios-blue transition-colors cursor-pointer whitespace-nowrap"
+              className="px-2.5 py-1.5 min-h-[36px] rounded-md bg-ios-tertiary text-ios-label border border-ios-sep hover:border-ios-blue transition-colors cursor-pointer whitespace-nowrap"
             >
-              Use Live Backend ({ENV.API_BASE_URL})
+              Use Live Backend ({getApiBaseUrl()})
             </button>
           </div>
         )}
 
         {/* Top Header */}
-        <header className="h-16 bg-ios-surface/95 backdrop-blur-md border-b border-ios-sep px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-30">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="h-16 bg-ios-surface/95 backdrop-blur-md border-b border-ios-sep px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-30">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open navigation menu"
-              className="lg:hidden p-2 rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary cursor-pointer shrink-0"
+              className="sm:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary cursor-pointer shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
+            <Link
+              to="/"
+              aria-label="ClipCat Home"
+              className="sm:hidden flex items-center shrink-0"
+            >
+              <ClipCatLogo size="xs" variant="mascot" />
+            </Link>
+            <span
+              className="sm:hidden h-5 w-px bg-ios-sep shrink-0"
+              aria-hidden="true"
+            />
             <div className="min-w-0">
               <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-1.5 text-xs text-ios-secondary">
                 {pageMeta.breadcrumbs.map((crumb, idx) => (
@@ -383,7 +457,7 @@ export function AppShell() {
                   </span>
                 ))}
               </nav>
-              <h1 className="font-display text-base sm:text-lg font-bold text-ios-label truncate">
+              <h1 className="font-display text-sm sm:text-lg font-bold text-ios-label truncate">
                 {pageMeta.title}
               </h1>
             </div>
@@ -431,11 +505,11 @@ export function AppShell() {
                 onClick={() => setNotifOpen((prev) => !prev)}
                 aria-label="Notifications"
                 aria-expanded={notifOpen}
-                className="relative p-2 rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary transition-colors cursor-pointer"
+                className="relative min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 p-2 rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary transition-colors cursor-pointer flex items-center justify-center"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-ios-orange-fill" />
+                  <span className="absolute top-2 right-2 sm:top-1.5 sm:right-1.5 w-2 h-2 rounded-full bg-ios-orange-fill" />
                 )}
               </button>
 
@@ -493,40 +567,35 @@ export function AppShell() {
               to="/settings"
               aria-label="Open Settings"
               title="Settings"
-              className="p-2 rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary transition-colors"
+              className="min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 p-2 rounded-lg text-ios-secondary hover:text-ios-label hover:bg-ios-tertiary transition-colors flex items-center justify-center"
             >
               <Settings className="w-4 h-4" />
             </Link>
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] w-full mx-auto min-w-0">
-          <Outlet />
-        </main>
+        <div
+          {...bindSwipe()}
+          className={cn('flex-1 flex flex-col min-w-0', canSwipe && 'touch-pan-y')}
+        >
+          <motion.main
+            animate={dragOffsetX !== 0 ? { x: dragOffsetX } : { x: 0 }}
+            transition={
+              isSwiping
+                ? { duration: 0 }
+                : { type: 'spring', stiffness: 420, damping: 36, mass: 0.6 }
+            }
+            className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] w-full mx-auto min-w-0"
+          >
+            <Outlet />
+          </motion.main>
+        </div>
 
-        <footer className="border-t border-ios-sep px-4 sm:px-6 lg:px-8 py-4 max-w-[1440px] w-full mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-ios-secondary">
-          <p>
-            © 2026 ClipCat · Local-first video studio · Zero personal data or analytics collected
-          </p>
-          <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-4">
-            <Link to="/" className="hover:text-ios-label transition-colors">
-              Dashboard
-            </Link>
-            <Link to="/projects" className="hover:text-ios-label transition-colors">
-              Projects
-            </Link>
-            <Link to="/exports" className="hover:text-ios-label transition-colors">
-              Exports
-            </Link>
-            <Link to="/settings" className="hover:text-ios-label transition-colors">
-              Settings
-            </Link>
-            <Link to="/system" className="hover:text-ios-label transition-colors">
-              System Status
-            </Link>
-          </nav>
-        </footer>
+        <Footer />
       </div>
+
+      {/* Fixed Mobile Bottom Navigation (< 640px) */}
+      <MobileBottomNav />
 
       <ToastContainer />
     </div>

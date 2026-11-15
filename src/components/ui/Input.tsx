@@ -35,7 +35,7 @@ export function Input({
         aria-invalid={Boolean(error)}
         aria-describedby={errorId}
         className={cn(
-          'h-10 w-full rounded-lg bg-ios-input px-3 text-sm text-ios-label placeholder:text-ios-tertiary-label border transition-colors focus:outline-none',
+          'h-11 sm:h-10 w-full rounded-lg bg-ios-input px-3 text-sm text-ios-label placeholder:text-ios-tertiary-label border transition-colors focus:outline-none',
           error
             ? 'border-ios-red focus:border-ios-red'
             : 'border-ios-sep focus:border-ios-blue',

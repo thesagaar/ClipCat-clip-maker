@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { AlertTriangle, RefreshCw, ServerOff } from 'lucide-react';
 import { ApiClientError } from '../../api/errors';
+import { BRAND } from '../../config/brand';
 import { ENV } from '../../config/env';
 import { Button } from './Button';
 
@@ -8,6 +10,7 @@ interface ErrorStateProps {
   title?: string;
   onRetry?: () => void;
   secondaryAction?: React.ReactNode;
+  showMascot?: boolean;
 }
 
 export function ErrorState({
@@ -15,7 +18,9 @@ export function ErrorState({
   title,
   onRetry,
   secondaryAction,
+  showMascot = true,
 }: ErrorStateProps) {
+  const [imgError, setImgError] = useState(false);
   const isOffline =
     error instanceof ApiClientError ? error.isBackendOffline : false;
   const message =
@@ -28,13 +33,27 @@ export function ErrorState({
       role="alert"
       className="rounded-xl bg-ios-surface border border-[var(--ios-red-border)] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-start gap-4"
     >
-      <div className="w-10 h-10 rounded-lg bg-[var(--ios-red-tint)] text-ios-red flex items-center justify-center shrink-0">
-        {isOffline ? (
-          <ServerOff className="w-5 h-5" />
-        ) : (
-          <AlertTriangle className="w-5 h-5" />
-        )}
-      </div>
+      {showMascot && !imgError ? (
+        <div className="w-12 h-12 rounded-xl bg-[#30194E]/35 border border-[var(--ios-red-border)] p-1 flex items-center justify-center shrink-0 overflow-hidden">
+          <img
+            src={BRAND.assets.clipcatIcon}
+            alt="ClipCat mascot logo"
+            width={40}
+            height={40}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            className="w-full h-full object-contain"
+          />
+        </div>
+      ) : (
+        <div className="w-10 h-10 rounded-lg bg-[var(--ios-red-tint)] text-ios-red flex items-center justify-center shrink-0">
+          {isOffline ? (
+            <ServerOff className="w-5 h-5" />
+          ) : (
+            <AlertTriangle className="w-5 h-5" />
+          )}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <h3 className="font-display text-base font-bold text-ios-label">
           {title ?? (isOffline ? 'Local FastAPI Backend Unavailable' : 'Request Failed')}

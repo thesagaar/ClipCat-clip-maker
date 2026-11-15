@@ -16,7 +16,7 @@ import { Button } from '../components/ui/Button';
 import { ErrorState } from '../components/ui/ErrorState';
 import { Skeleton } from '../components/ui/Skeleton';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
-import { ENV } from '../config/env';
+import { ENV, getApiBaseUrl } from '../config/env';
 import {
   useSystemDependenciesQuery,
   useSystemHealthQuery,
@@ -65,16 +65,18 @@ export function SystemStatusPage() {
     }
   };
 
+  const activeApiUrl = getApiBaseUrl();
+
   const handleCopyUrl = async () => {
     try {
-      await navigator.clipboard.writeText(ENV.API_BASE_URL);
+      await navigator.clipboard.writeText(activeApiUrl);
       setCopiedUrl(true);
       setTimeout(() => setCopiedUrl(false), 2000);
     } catch {
       addToast({
         variant: 'info',
         title: 'Copy Unavailable',
-        description: `API URL: ${ENV.API_BASE_URL}`,
+        description: `API URL: ${activeApiUrl}`,
       });
     }
   };
@@ -149,7 +151,7 @@ export function SystemStatusPage() {
             <StatusIndicator status={health?.status ?? 'unavailable'} />
           )}
           <p className="text-xs font-mono text-ios-secondary truncate">
-            {ENV.API_BASE_URL}
+            {activeApiUrl}
           </p>
         </div>
 
@@ -231,7 +233,7 @@ export function SystemStatusPage() {
               </button>
             </div>
             <p className="font-mono text-xs text-ios-label break-all">
-              {ENV.API_BASE_URL}
+              {activeApiUrl}
             </p>
           </div>
 

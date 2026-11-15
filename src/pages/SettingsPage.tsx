@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { RotateCcw, Save, Trash2 } from 'lucide-react';
 import { DEFAULT_APP_SETTINGS, DEFAULT_CAPTION_PRESETS } from '../api';
+import { ClipCatLogo } from '../components/brand/ClipCatLogo';
+import { SdpLogo } from '../components/brand/SdpLogo';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { ConfirmDialog } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
 import { Toggle } from '../components/ui/Toggle';
-import { ENV } from '../config/env';
+import { BRAND } from '../config/brand';
+import { ENV, getApiBaseUrl, setRuntimeApiBaseUrl } from '../config/env';
 import {
   useCaptionPresetsQuery,
   useClearTempFilesMutation,
@@ -38,13 +43,17 @@ export function SettingsPage() {
   const resetMutation = useResetSettingsMutation();
   const clearTempMutation = useClearTempFilesMutation();
   const { mockModeEnabled, setMockModeEnabled, themeMode, setThemeMode, addToast } = useUiStore();
+  const queryClient = useQueryClient();
 
   const [form, setForm] = useState<AppSettings>(() => {
     const initial = structuredClone(DEFAULT_APP_SETTINGS);
     initial.general.theme = themeMode;
     return initial;
   });
+  const [backendUrlInput, setBackendUrlInput] = useState(() => getApiBaseUrl());
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+
+  const { pathname, hash } = useLocation();
 
   useEffect(() => {
     if (settingsQuery.data) {
@@ -52,6 +61,15 @@ export function SettingsPage() {
       setThemeMode(settingsQuery.data.general.theme);
     }
   }, [settingsQuery.data, setThemeMode]);
+
+  useEffect(() => {
+    if (!hash) return;
+    const targetId = hash.replace(/^#/, '');
+    const el = document.getElementById(targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [pathname, hash]);
 
   const presets = presetsQuery.data ?? DEFAULT_CAPTION_PRESETS;
 
@@ -109,6 +127,26 @@ export function SettingsPage() {
     }
   };
 
+  const handleApplyBackendUrl = () => {
+    const trimmed = backendUrlInput.trim();
+    if (trimmed && !/^https?:\/\/.+/i.test(trimmed)) {
+      addToast({
+        variant: 'error',
+        title: 'Invalid Backend URL',
+        description: 'Enter a valid http:// or https:// address (for example http://192.168.1.42:8000).',
+      });
+      return;
+    }
+    const activeUrl = setRuntimeApiBaseUrl(trimmed || null);
+    setBackendUrlInput(activeUrl);
+    queryClient.invalidateQueries();
+    addToast({
+      variant: 'success',
+      title: 'Backend Address Updated',
+      description: `FastAPI requests now target ${activeUrl}.`,
+    });
+  };
+
   const getDepStatus = (id: string) =>
     depsQuery.data?.dependencies.find((d) => d.id === id)?.status ?? 'unavailable';
 
@@ -143,7 +181,7 @@ export function SettingsPage() {
 
       {settingsQuery.isError && (
         <div className="rounded-xl bg-[var(--ios-orange-tint)] border border-[var(--ios-orange-border)] px-4 py-3 text-xs text-ios-orange break-words">
-          Unable to load live settings from FastAPI ({ENV.API_BASE_URL}). Showing default values—saving requires the backend server.
+          Unable to load live settings from FastAPI ({getApiBaseUrl()}). Showing default values—saving requires the backend server.
         </div>
       )}
 
@@ -493,9 +531,51 @@ export function SettingsPage() {
 
       {/* SYSTEM & DEVELOPER ADAPTER */}
       <section className="rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-5">
-        <h3 className="font-display text-base font-bold text-ios-label">
-          System & Backend Connection
-        </h3>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-display text-base font-bold text-ios-label">
+            System & Backend Connection
+          </h3>
+          <Link to="/system" className="text-xs font-medium text-ios-blue hover:underline">
+            Open System Diagnostics
+          </Link>
+        </div>
+
+        <div className="rounded-lg bg-ios-bg border border-ios-sep p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex-1 min-w-0">
+              <Input
+                label="FastAPI Backend Server URL (Desktop or LAN IP for Mobile)"
+                type="url"
+                placeholder={ENV.API_BASE_URL}
+                value={backendUrlInput}
+                onChange={(e) => setBackendUrlInput(e.target.value)}
+                helperText="On mobile devices, enter your host computer's LAN IP (e.g. http://192.168.1.25:8000) rather than 127.0.0.1."
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <Button variant="secondary" onClick={handleApplyBackendUrl}>
+                Apply Server URL
+              </Button>
+              {backendUrlInput !== ENV.API_BASE_URL && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    const resetUrl = setRuntimeApiBaseUrl(null);
+                    setBackendUrlInput(resetUrl);
+                    queryClient.invalidateQueries();
+                    addToast({
+                      variant: 'info',
+                      title: 'Backend URL Restored',
+                      description: `Reverted to default (${resetUrl}).`,
+                    });
+                  }}
+                >
+                  Reset
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
           <div className="min-w-0 rounded-lg bg-ios-bg border border-ios-sep p-3.5 flex items-center justify-between gap-2">
@@ -522,7 +602,7 @@ export function SettingsPage() {
           </div>
           <div className="min-w-0 rounded-lg bg-ios-bg border border-ios-sep p-3.5 flex items-center justify-between gap-2">
             <span className="text-ios-secondary">Frontend Version</span>
-            <span className="font-mono text-ios-label">v{ENV.APP_VERSION}</span>
+            <span className="font-mono text-ios-label">v{BRAND.version}</span>
           </div>
         </div>
 
@@ -531,9 +611,124 @@ export function SettingsPage() {
             checked={mockModeEnabled}
             onChange={(checked) => setMockModeEnabled(checked)}
             label="Isolated Development Mock Adapter (VITE_USE_MOCK_API)"
-            description="When enabled, ClipCat serves explicitly labeled sample data in-memory instead of querying http://127.0.0.1:8000."
+            description={`When enabled, ClipCat serves explicitly labeled sample data in-memory instead of querying ${getApiBaseUrl()}.`}
           />
         </div>
+      </section>
+
+      {/* ABOUT CLIPCAT (SDP OWNERSHIP & PRODUCT IDENTITY) */}
+      <section
+        id="about"
+        aria-label="About ClipCat"
+        className="scroll-mt-20 rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-5"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ios-sep">
+          <div className="flex flex-wrap items-center gap-4">
+            <ClipCatLogo size="lg" variant="full" showSubtitle />
+            <span className="hidden sm:inline-block h-8 w-px bg-ios-sep" aria-hidden="true" />
+            <div className="flex items-center gap-2.5">
+              <SdpLogo size="sm" />
+              <div className="text-xs">
+                <p className="font-medium text-ios-label">{BRAND.parentBrandName}</p>
+                <p className="text-ios-secondary">{BRAND.shortAttribution}</p>
+              </div>
+            </div>
+          </div>
+          <span className="text-xs font-mono text-ios-secondary">
+            v{BRAND.version}
+          </span>
+        </div>
+
+        <div>
+          <h3 className="font-display text-base font-bold text-ios-label">
+            About {BRAND.productName}
+          </h3>
+          <p className="text-xs text-ios-secondary mt-1">
+            {BRAND.developedByStatement} &ldquo;{BRAND.productTagline}&rdquo;
+          </p>
+        </div>
+
+        <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+          <div className="rounded-lg bg-ios-bg border border-ios-sep p-3.5 space-y-1">
+            <dt className="text-ios-secondary">Product</dt>
+            <dd className="font-semibold text-ios-label">{BRAND.productName}</dd>
+          </div>
+          <div className="rounded-lg bg-ios-bg border border-ios-sep p-3.5 space-y-1">
+            <dt className="text-ios-secondary">Product category</dt>
+            <dd className="font-semibold text-ios-label">{BRAND.productCategory}</dd>
+          </div>
+          <div className="rounded-lg bg-ios-bg border border-ios-sep p-3.5 space-y-1">
+            <dt className="text-ios-secondary">Developed by</dt>
+            <dd className="font-semibold text-ios-label">{BRAND.parentBrandName}</dd>
+          </div>
+          <div className="rounded-lg bg-ios-bg border border-ios-sep p-3.5 space-y-1">
+            <dt className="text-ios-secondary">Product version</dt>
+            <dd className="font-mono text-ios-label">v{BRAND.version}</dd>
+          </div>
+          <div className="rounded-lg bg-ios-bg border border-ios-sep p-3.5 space-y-1">
+            <dt className="text-ios-secondary">Platform</dt>
+            <dd className="font-semibold text-ios-label">{BRAND.platforms}</dd>
+          </div>
+          <div className="rounded-lg bg-ios-bg border border-ios-sep p-3.5 space-y-1">
+            <dt className="text-ios-secondary">Processing</dt>
+            <dd className="font-semibold text-ios-label">{BRAND.processingSummary}</dd>
+          </div>
+          <div className="rounded-lg bg-ios-bg border border-ios-sep p-3.5 space-y-1">
+            <dt className="text-ios-secondary">Website</dt>
+            <dd className="font-mono text-ios-label break-words">
+              <a
+                href={BRAND.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ios-blue hover:underline"
+              >
+                {BRAND.website}
+              </a>
+            </dd>
+          </div>
+          <div className="rounded-lg bg-ios-bg border border-ios-sep p-3.5 space-y-1">
+            <dt className="text-ios-secondary">Support</dt>
+            <dd className="font-mono text-ios-label break-words space-y-1">
+              <a
+                href={BRAND.supportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ios-blue hover:underline block"
+              >
+                {BRAND.supportUrl}
+              </a>
+              {BRAND.supportEmail && (
+                <a
+                  href={`mailto:${BRAND.supportEmail}`}
+                  className="text-ios-blue hover:underline block"
+                >
+                  {BRAND.supportEmail}
+                </a>
+              )}
+            </dd>
+          </div>
+          <div className="rounded-lg bg-ios-bg border border-ios-sep p-3.5 space-y-1">
+            <dt className="text-ios-secondary">Copyright</dt>
+            <dd className="font-semibold text-ios-label">{BRAND.aboutCopyright}</dd>
+          </div>
+        </dl>
+      </section>
+
+      {/* PRIVACY & DATA HANDLING */}
+      <section
+        id="privacy"
+        aria-label="Privacy and Data Handling"
+        className="scroll-mt-20 rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-6 space-y-3"
+      >
+        <h3 className="font-display text-base font-bold text-ios-label">
+          Privacy &amp; Data Handling
+        </h3>
+        <p className="text-xs sm:text-sm text-ios-secondary leading-relaxed">
+          ClipCat runs strictly local-first. Uploaded videos, extracted audio, speech transcripts, and exported MP4/SRT files remain on your computer and your configured local FastAPI backend. No analytics, tracking beacons, user accounts, or unnecessary personal data are collected.
+        </p>
+        <p className="text-xs text-ios-tertiary-label">
+          Only interface preferences (theme selection, sidebar state, and your local backend URL) are stored in browser local storage.
+        </p>
       </section>
 
       <ConfirmDialog

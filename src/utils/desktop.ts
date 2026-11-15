@@ -21,6 +21,10 @@ export function getRuntimeEnvironmentLabel(): 'Tauri Desktop' | 'Web Browser (Lo
   return isTauriEnvironment() ? 'Tauri Desktop' : 'Web Browser (Local API)';
 }
 
+export function getPlatformDisplayLabel(): 'Windows Desktop' | 'Web Browser' {
+  return isTauriEnvironment() ? 'Windows Desktop' : 'Web Browser';
+}
+
 export async function openOutputFolder(directoryPath: string): Promise<{
   supported: boolean;
   message: string;
