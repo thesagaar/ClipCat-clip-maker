@@ -15,6 +15,9 @@ import {
 import { MascotAssistant } from '../components/brand/MascotAssistant';
 import { SdpLogo } from '../components/brand/SdpLogo';
 import { DashboardWidget } from '../components/dashboard/DashboardWidget';
+import { QuickImportButton } from '../components/dashboard/QuickImportButton';
+import { QuickStartCarousel } from '../components/dashboard/QuickStartCarousel';
+import { RecentClipsStrip } from '../components/dashboard/RecentClipsStrip';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -130,6 +133,7 @@ export function DashboardPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <QuickImportButton variant="secondary" size="lg" className="w-full sm:w-auto" />
           <Link to="/projects/new" className="w-full sm:w-auto">
             <Button
               variant="accent-purple"
@@ -142,6 +146,9 @@ export function DashboardPage() {
           </Link>
         </div>
       </section>
+
+      {/* First-Time Visitor Quick Start Carousel */}
+      <QuickStartCarousel />
 
       {/* Backend Offline Notice */}
       {projectsQuery.isError && (
@@ -345,6 +352,13 @@ export function DashboardPage() {
           </div>
         </section>
       )}
+
+      {/* Horizontal Scrollable Shelf of the 5 Most Recently Finished Clips */}
+      <RecentClipsStrip
+        clips={clips}
+        isLoading={clipsQuery.isLoading}
+        isError={clipsQuery.isError}
+      />
 
       {/* Main Lower Grid: Recent Projects + Storage & Onboarding */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

@@ -2,7 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Clip } from '../../types/clip';
 import type { Project } from '../../types/project';
-import { buildStudioActivityBreakdown } from './dashboardWidgetUtils';
+import {
+  QUICK_START_DISMISSED_KEY,
+  buildStudioActivityBreakdown,
+  getRecentCompletedClips,
+  isQuickStartVisible,
+  markQuickStartDismissed,
+} from './dashboardWidgetUtils';
 
 const baseConfig: Project['config'] = {
   projectName: 'Sample',
@@ -42,7 +48,12 @@ function makeProject(id: string, status: Project['status']): Project {
   };
 }
 
-function makeClip(id: string, projectId: string): Clip {
+function makeClip(
+  id: string,
+  projectId: string,
+  status: Clip['status'] = 'completed',
+  updatedAt = '2026-11-15T00:00:00Z'
+): Clip {
   return {
     id,
     projectId,
@@ -62,7 +73,7 @@ function makeClip(id: string, projectId: string): Clip {
     layoutMode: 'smart_face_tracking',
     resolution: '1080p',
     fileSizeBytes: 512,
-    status: 'completed',
+    status,
     captionStatus: 'applied',
     exportStatus: 'ready',
     captionSettings: {
@@ -74,8 +85,8 @@ function makeClip(id: string, projectId: string): Clip {
       wordByWordAnimation: false,
       speakerLabels: false,
     },
-    createdAt: '2026-11-15T00:00:00Z',
-    updatedAt: '2026-11-15T00:00:00Z',
+    createdAt: updatedAt,
+    updatedAt,
   };
 }
 
@@ -118,4 +129,40 @@ test('buildStudioActivityBreakdown handles zero projects and zero clips safely',
   assert.equal(summary.totalClipsCount, 0);
   assert.equal(summary.averageClipsPerVideo, 0);
   assert.equal(summary.hasActivity, false);
+});
+
+test('getRecentCompletedClips filters to completed clips, sorts newest first, and limits to 5', () => {
+  const clips: Clip[] = [
+    makeClip('c1', 'p1', 'completed', '2026-11-10T10:00:00Z'),
+    makeClip('c2', 'p1', 'rendering', '2026-11-15T12:00:00Z'),
+    makeClip('c3', 'p1', 'completed', '2026-11-14T10:00:00Z'),
+    makeClip('c4', 'p1', 'completed', '2026-11-15T10:00:00Z'),
+    makeClip('c5', 'p1', 'completed', '2026-11-12T10:00:00Z'),
+    makeClip('c6', 'p1', 'completed', '2026-11-13T10:00:00Z'),
+    makeClip('c7', 'p1', 'completed', '2026-11-11T10:00:00Z'),
+    makeClip('c8', 'p1', 'failed', '2026-11-16T00:00:00Z'),
+  ];
+
+  const recent = getRecentCompletedClips(clips, 5);
+
+  assert.equal(recent.length, 5);
+  assert.deepEqual(
+    recent.map((c) => c.id),
+    ['c4', 'c3', 'c6', 'c5', 'c7']
+  );
+});
+
+test('Quick Start visibility stays true for first-time visitor and false once dismissed', () => {
+  const mem = new Map<string, string>();
+  const mockStorage = {
+    getItem: (k: string) => mem.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      mem.set(k, v);
+    },
+  };
+
+  assert.equal(isQuickStartVisible(mockStorage), true);
+  markQuickStartDismissed(mockStorage);
+  assert.equal(mem.get(QUICK_START_DISMISSED_KEY), '1');
+  assert.equal(isQuickStartVisible(mockStorage), false);
 });

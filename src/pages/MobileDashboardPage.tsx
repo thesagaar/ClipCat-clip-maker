@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { BrandHeader } from '../components/brand/BrandHeader';
 import { DashboardWidget } from '../components/dashboard/DashboardWidget';
+import { QuickImportButton } from '../components/dashboard/QuickImportButton';
+import { QuickStartCarousel } from '../components/dashboard/QuickStartCarousel';
+import { RecentClipsStrip } from '../components/dashboard/RecentClipsStrip';
 import { PullToRefresh } from '../components/mobile/PullToRefresh';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -101,18 +104,28 @@ export function MobileDashboardPage() {
             {BRAND.productTagline}
           </p>
 
-          {/* Prioritized Primary Create Action */}
-          <Link to="/projects/new" className="block pt-0.5">
-            <Button
-              variant="accent-purple"
-              size="lg"
-              className="w-full shadow-md"
-              icon={<Plus className="w-5 h-5" />}
-            >
-              New Project
-            </Button>
-          </Link>
+          {/* Prioritized Primary Create Action & Quick Import */}
+          <div className="grid grid-cols-1 gap-2.5 pt-0.5">
+            <Link to="/projects/new" className="block">
+              <Button
+                variant="accent-purple"
+                size="lg"
+                className="w-full shadow-md"
+                icon={<Plus className="w-5 h-5" />}
+              >
+                New Project
+              </Button>
+            </Link>
+            <QuickImportButton
+              variant="secondary"
+              size="md"
+              className="w-full"
+            />
+          </div>
         </section>
+
+        {/* First-Time Visitor Quick Start Guide */}
+        <QuickStartCarousel compact />
 
       {/* Backend Offline Notice */}
       {projectsQuery.isError && (
@@ -250,6 +263,14 @@ export function MobileDashboardPage() {
         clips={clips}
         isLoading={projectsQuery.isLoading || clipsQuery.isLoading}
         isError={projectsQuery.isError}
+      />
+
+      {/* Horizontal Scrollable Recent Finished Clips */}
+      <RecentClipsStrip
+        compact
+        clips={clips}
+        isLoading={clipsQuery.isLoading}
+        isError={clipsQuery.isError}
       />
 
       {/* Active Jobs */}
