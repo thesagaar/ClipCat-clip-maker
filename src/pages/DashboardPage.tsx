@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Clock,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import { MascotAssistant } from '../components/brand/MascotAssistant';
 import { SdpLogo } from '../components/brand/SdpLogo';
+import { DashboardWidget } from '../components/dashboard/DashboardWidget';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -36,6 +38,18 @@ import {
 } from '../utils/format';
 
 export function DashboardPage() {
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const sync = () => setIsMobileViewport(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
   const projectsQuery = useProjectsQuery();
   const clipsQuery = useAllClipsQuery();
   const storageQuery = useSystemStorageQuery();
@@ -77,13 +91,12 @@ export function DashboardPage() {
     }
   };
 
-  return (
-    <>
-      <div className="sm:hidden">
-        <MobileDashboardPage />
-      </div>
+  if (isMobileViewport) {
+    return <MobileDashboardPage />;
+  }
 
-      <div className="hidden sm:block space-y-8">
+  return (
+      <div className="space-y-8">
         {/* Studio Hero Header */}
         <section className="rounded-xl bg-ios-surface border border-ios-sep p-5 sm:p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 sm:gap-6">
         <div className="space-y-3 max-w-2xl min-w-0">
@@ -199,6 +212,14 @@ export function DashboardPage() {
           )}
         </div>
       </section>
+
+      {/* Studio Activity Chart Widget (Clips Generated vs Processed Videos) */}
+      <DashboardWidget
+        projects={projects}
+        clips={clips}
+        isLoading={projectsQuery.isLoading || clipsQuery.isLoading}
+        isError={projectsQuery.isError}
+      />
 
       {/* Quick Actions */}
       <section aria-label="Quick actions" className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -490,6 +511,5 @@ export function DashboardPage() {
         </aside>
       </div>
       </div>
-    </>
   );
 }

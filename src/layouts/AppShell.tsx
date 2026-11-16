@@ -159,7 +159,7 @@ export function AppShell() {
   );
 
   return (
-    <div className="min-h-screen bg-ios-bg text-ios-label flex overflow-x-hidden">
+    <div className="min-h-screen bg-ios-bg text-ios-label flex overflow-x-clip">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#7040DC] focus:text-white focus:text-sm focus:font-semibold focus:shadow-lg"
@@ -310,27 +310,8 @@ export function AppShell() {
 
       {/* Main Content Column (global mobile bottom nav + safe-area inset clearance) */}
       <div className="flex-1 min-w-0 flex flex-col pb-mobile-nav-safe">
-        {/* Explicit Mock Mode Notice (never silent) */}
-        {mockModeEnabled && (
-          <div
-            role="status"
-            className="bg-ios-surface border-b border-[var(--ios-orange-border)] px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs"
-          >
-            <span className="text-ios-label">
-              <strong className="text-ios-orange">Mock Adapter Active:</strong> Displaying isolated sample data for frontend inspection. Not connected to live FastAPI processing.
-            </span>
-            <button
-              type="button"
-              onClick={() => setMockModeEnabled(false)}
-              className="px-2.5 py-1.5 min-h-[36px] rounded-md bg-ios-tertiary text-ios-label border border-ios-sep hover:border-ios-blue transition-colors cursor-pointer whitespace-nowrap"
-            >
-              Use Live Backend ({getApiBaseUrl()})
-            </button>
-          </div>
-        )}
-
-        {/* Top Header */}
-        <header className="h-16 bg-ios-surface/95 backdrop-blur-md border-b border-ios-sep px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-30">
+        {/* Top Header (constant sticky bar at top of viewport) */}
+        <header className="h-16 bg-ios-surface/95 backdrop-blur-md border-b border-ios-sep px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-40">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
@@ -482,6 +463,25 @@ export function AppShell() {
             </Link>
           </div>
         </header>
+
+        {/* Explicit Mock Mode Notice (rendered below constant header so top bar never shifts) */}
+        {mockModeEnabled && (
+          <div
+            role="status"
+            className="bg-ios-surface border-b border-[var(--ios-orange-border)] px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs"
+          >
+            <span className="text-ios-label">
+              <strong className="text-ios-orange">Mock Adapter Active:</strong> Displaying isolated sample data for frontend inspection. Not connected to live FastAPI processing.
+            </span>
+            <button
+              type="button"
+              onClick={() => setMockModeEnabled(false)}
+              className="px-2.5 py-1.5 min-h-[36px] rounded-md bg-ios-tertiary text-ios-label border border-ios-sep hover:border-ios-blue transition-colors cursor-pointer whitespace-nowrap"
+            >
+              Use Live Backend ({getApiBaseUrl()})
+            </button>
+          </div>
+        )}
 
         <div
           {...bindSwipe()}

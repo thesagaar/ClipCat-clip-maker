@@ -13,6 +13,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { BrandHeader } from '../components/brand/BrandHeader';
+import { DashboardWidget } from '../components/dashboard/DashboardWidget';
 import { PullToRefresh } from '../components/mobile/PullToRefresh';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -241,6 +242,15 @@ export function MobileDashboardPage() {
           )}
         </div>
       </section>
+
+      {/* Compact Recharts Activity Breakdown */}
+      <DashboardWidget
+        compact
+        projects={projects}
+        clips={clips}
+        isLoading={projectsQuery.isLoading || clipsQuery.isLoading}
+        isError={projectsQuery.isError}
+      />
 
       {/* Active Jobs */}
       {activeProjects.length > 0 && (

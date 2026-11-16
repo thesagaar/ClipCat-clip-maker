@@ -17,6 +17,13 @@ export default defineConfig(() => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
+              if (
+                id.includes('recharts') ||
+                id.includes('d3-') ||
+                id.includes('victory-vendor')
+              ) {
+                return 'vendor-charts';
+              }
               if (id.includes('react-router')) return 'vendor-router';
               if (id.includes('@tanstack/react-query')) return 'vendor-query';
               if (id.includes('motion') || id.includes('framer-motion')) return 'vendor-motion';
