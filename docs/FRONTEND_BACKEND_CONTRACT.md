@@ -316,3 +316,22 @@ Response: `{ "archiveUrl": "/api/exports/bundle-123.zip", "exportedCount": 1, "m
 - `GET /api/system/health` -> `SystemHealthResponse`
 - `GET /api/system/dependencies` -> `DependenciesResponse`
 - `GET /api/system/storage` -> `StorageResponse`
+
+---
+
+## 8. Direct Publishing, OAuth & Attribution (`/api/publishing/*`)
+
+Implemented in the Express server layer (`server/publishing/`) with parity designed for optional FastAPI/SQLite/OS Credential Manager desktop builds:
+
+- `POST /api/publishing/session` -> Ephemeral in-memory `X-ClipCat-Token` session
+- `GET /api/publishing/accounts` -> Connected YouTube/Instagram account summaries (never exposes OAuth tokens/secrets)
+- `POST /api/publishing/oauth/{platform}/start` -> Initiates OAuth 2.0 + `state` + PKCE (`S256` on YouTube)
+- `GET /api/publishing/oauth/{platform}/callback` -> Exchanges code on server, writes AES-256-GCM encrypted vault (`ClipCatData/publishing/vault.enc.json`), notifies popup opener via `postMessage`
+- `POST /api/publishing/accounts/{platform}/disconnect` -> Revokes & deletes local encrypted credentials
+- `POST /api/publishing/metadata/generate` -> Builds title candidates, structured description, separated YouTube tags (`<=500` chars) & hashtags, language detection, caption summary, and non-fabricated attribution (`verified` / `user_provided` / `ATTRIBUTION_UNVERIFIED`)
+- `POST /api/publishing/validate` -> Pre-upload platform limits, eligibility, HTTPS media transfer requirement (Instagram), and duplicate publication check
+- `POST /api/publishing/start` -> Requires `userConfirmedPublish: true`; checks FFprobe stream & shared active job lock; streams YouTube Data API v3 resumable uploads (`1 MB` chunks) and optional `.srt` captions, or single-use temporary HTTPS relay for official Instagram Graph API Reels
+- `GET /api/publishing/jobs/{jobId}`, `POST /api/publishing/jobs/{jobId}/retry`, `POST /api/publishing/jobs/{jobId}/cancel`
+- `GET /api/publishing/history`
+- `POST /api/publishing/manual-share-package` -> Exports prepared metadata/attribution/SRT bundle for manual sharing when Instagram HTTPS public relay is unavailable
+

@@ -1691,12 +1691,15 @@ export function ChatSpikePage() {
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>Saved to ClipCat Studio Library ({job.savedProjectId})</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Link to="/clips" className="text-ios-label font-semibold hover:underline">
                   Open Clip Library
                 </Link>
                 <Link to="/exports" className="text-ios-label font-semibold hover:underline">
                   Open Export Manager
+                </Link>
+                <Link to="/publish" className="text-ios-blue font-semibold hover:underline">
+                  Direct Publishing
                 </Link>
               </div>
             </div>
@@ -1772,11 +1775,18 @@ export function ChatSpikePage() {
                       </Button>
                     )}
                     {cand.savedClipId && (
-                      <Link to={`/clips/${cand.savedClipId}/edit`}>
-                        <Button variant="secondary" size="sm" icon={<Layers className="w-3.5 h-3.5" />}>
-                          Open in Editor
-                        </Button>
-                      </Link>
+                      <>
+                        <Link to={`/clips/${cand.savedClipId}/edit`}>
+                          <Button variant="secondary" size="sm" icon={<Layers className="w-3.5 h-3.5" />}>
+                            Open in Editor
+                          </Button>
+                        </Link>
+                        <Link to={`/publish/${cand.savedClipId}`}>
+                          <Button variant="accent-purple" size="sm">
+                            Publish
+                          </Button>
+                        </Link>
+                      </>
                     )}
                   </div>
                 </div>

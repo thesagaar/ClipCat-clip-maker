@@ -30,6 +30,7 @@ import {
   probeVideoFile,
   renderClipSegment,
 } from './chatspikeFfmpeg.ts';
+import type { ActiveJobLock } from './activeJobLock.ts';
 import {
   createRequireAuthMiddleware,
   createSecurityContext,
@@ -71,6 +72,7 @@ interface JobRuntimeMeta {
 export interface ChatSpikeRouterOptions {
   dataDir?: string;
   maxVideoUploadBytes?: number;
+  activeJobLock?: ActiveJobLock;
 }
 
 function buildTinyZipBuffer(
@@ -903,9 +905,10 @@ export function createChatSpikeRouter(options: ChatSpikeRouterOptions = {}): {
         return;
       }
 
-      if (activeProcessingJobId !== null) {
+      const globalActive = options.activeJobLock?.getActive();
+      if (activeProcessingJobId !== null || (globalActive && globalActive.jobId !== jobId)) {
         res.status(409).json({
-          detail: `Another ChatSpike job (${activeProcessingJobId}) is already running. Cancel it or wait for completion.`,
+          detail: `Another ClipCat processing or publishing job (${activeProcessingJobId ?? globalActive?.jobId}) is already running. Cancel it or wait for completion.`,
         });
         return;
       }
@@ -938,6 +941,12 @@ export function createChatSpikeRouter(options: ChatSpikeRouterOptions = {}): {
         }
       }
 
+      if (options.activeJobLock && !options.activeJobLock.tryAcquire(jobId, 'chatspike')) {
+        res.status(409).json({
+          detail: 'Another ClipCat processing or publishing job is currently active.',
+        });
+        return;
+      }
       activeProcessingJobId = jobId;
       const controller = new AbortController();
       activeAbortController = controller;
@@ -1090,6 +1099,7 @@ export function createChatSpikeRouter(options: ChatSpikeRouterOptions = {}): {
           persistJob(job);
         } finally {
           cleanupJobTempDir(dirs, jobId);
+          options.activeJobLock?.release(jobId);
           if (activeProcessingJobId === jobId) {
             activeProcessingJobId = null;
             activeAbortController = null;

@@ -11,6 +11,7 @@ import {
   Plus,
   RefreshCw,
   Save,
+  Send,
   SlidersHorizontal,
   Volume2,
   VolumeX,
@@ -319,6 +320,16 @@ export function ClipEditorPage() {
           >
             Re-render Clip
           </Button>
+          <Link to={`/publish/${clip.id}`} className="flex-1 sm:flex-initial">
+            <Button
+              variant="primary"
+              size="sm"
+              className="w-full"
+              icon={<Send className="w-3.5 h-3.5" />}
+            >
+              Publish
+            </Button>
+          </Link>
         </div>
       </div>
 

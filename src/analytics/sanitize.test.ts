@@ -37,6 +37,8 @@ describe('analytics sanitization and consent gates', () => {
     assert.equal(sanitizeRouteIdentifier('/projects/proj-999/processing?jobId=job-123&token=xyz'), '/projects/:id/processing');
     assert.equal(sanitizeRouteIdentifier('/projects/proj-999/clips#top'), '/projects/:id/clips');
     assert.equal(sanitizeRouteIdentifier('/clips/clip_888/edit?mock=1'), '/clips/:id/edit');
+    assert.equal(sanitizeRouteIdentifier('/publish'), '/publish');
+    assert.equal(sanitizeRouteIdentifier('/publish/clip_888?token=secret'), '/publish/:id');
     assert.equal(sanitizeRouteIdentifier('/privacy'), '/privacy');
     assert.equal(sanitizeRouteIdentifier('/some-unknown-secret-path'), '/unknown');
   });

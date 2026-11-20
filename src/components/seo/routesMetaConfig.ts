@@ -132,6 +132,28 @@ export const ROUTE_META_DEFINITIONS: readonly RouteMetaDefinition[] = [
     breadcrumbs: [{ label: 'Workspace', to: '/' }, { label: 'Exports' }],
   },
   {
+    pattern: '/publish',
+    title: 'Publish Clip — ClipCat',
+    description: 'Publish finished ClipCat clips with auto-generated captions, metadata, and creator attribution.',
+    robots: 'noindex, nofollow',
+    pageGroup: 'publish',
+    headerTitle: 'Direct Publishing',
+    breadcrumbs: [{ label: 'Workspace', to: '/' }, { label: 'Publish' }],
+  },
+  {
+    pattern: '/publish/:id',
+    title: 'Publish Clip Studio — ClipCat',
+    description: 'Review destination formatting, creator attribution, and metadata before publishing a clip.',
+    robots: 'noindex, nofollow',
+    pageGroup: 'publish_clip',
+    headerTitle: 'Publish Clip',
+    breadcrumbs: [
+      { label: 'Workspace', to: '/' },
+      { label: 'Clip Library', to: '/clips' },
+      { label: 'Publish' },
+    ],
+  },
+  {
     pattern: '/presets',
     title: 'Caption Presets — ClipCat',
     description: 'Customize typography, highlight colors, and caption placement presets for exported clips.',
@@ -195,6 +217,9 @@ export function resolveRouteMeta(pathname: string): RouteMetaDefinition {
   }
   if (/^\/clips\/[^/]+\/edit$/.test(cleanPath)) {
     return ROUTE_META_DEFINITIONS.find((r) => r.pattern === '/clips/:id/edit')!;
+  }
+  if (/^\/publish\/[^/]+$/.test(cleanPath)) {
+    return ROUTE_META_DEFINITIONS.find((r) => r.pattern === '/publish/:id')!;
   }
 
   return NOT_FOUND_ROUTE_META;

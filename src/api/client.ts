@@ -22,12 +22,40 @@ export interface UploadOptions {
 }
 
 let mockModeRuntimeOverride: boolean | null = null;
+let inMemoryFastApiAuthToken: string | null = null;
+
+/**
+ * Stores an authorized per-install bearer token strictly in memory (never localStorage or logs)
+ * once obtained cleanly from the desktop shell / backend handshake.
+ */
+export function setFastApiAuthToken(token: string | null): void {
+  const trimmed = token?.trim() ?? '';
+  inMemoryFastApiAuthToken = trimmed.length > 0 ? trimmed : null;
+}
+
+export function getFastApiAuthHeader(): Record<string, string> {
+  return inMemoryFastApiAuthToken
+    ? { Authorization: `Bearer ${inMemoryFastApiAuthToken}` }
+    : {};
+}
+
+export function hasFastApiAuthToken(): boolean {
+  return Boolean(inMemoryFastApiAuthToken);
+}
 
 export function setRuntimeMockMode(enabled: boolean | null): void {
+  if (ENV.IS_PROD) {
+    mockModeRuntimeOverride = false;
+    return;
+  }
   mockModeRuntimeOverride = enabled;
 }
 
 export function isMockApiEnabled(): boolean {
+  // Never allow mock mode bypass in production builds via runtime state or URL params
+  if (ENV.IS_PROD) {
+    return false;
+  }
   if (mockModeRuntimeOverride !== null) {
     return mockModeRuntimeOverride;
   }
@@ -77,6 +105,7 @@ export async function apiRequest<T>(
       headers: {
         ...(isJsonBody ? { 'Content-Type': 'application/json' } : {}),
         Accept: 'application/json',
+        ...getFastApiAuthHeader(),
         ...headers,
       },
       body: isJsonBody ? JSON.stringify(body) : (body as BodyInit | undefined),
@@ -97,13 +126,15 @@ export async function apiRequest<T>(
       );
 
       const code =
-        response.status === 422 || response.status === 400
-          ? 'VALIDATION_ERROR'
-          : response.status === 404
-            ? 'NOT_FOUND'
-            : response.status === 409
-              ? 'CONFLICT'
-              : 'HTTP_ERROR';
+        response.status === 401 || response.status === 403
+          ? 'UNAUTHORIZED'
+          : response.status === 422 || response.status === 400
+            ? 'VALIDATION_ERROR'
+            : response.status === 404
+              ? 'NOT_FOUND'
+              : response.status === 409
+                ? 'CONFLICT'
+                : 'HTTP_ERROR';
 
       throw new ApiClientError({
         message,
@@ -152,6 +183,9 @@ export function apiUpload<T>(path: string, options: UploadOptions): Promise<T> {
     xhr.open('POST', buildApiUrl(path), true);
     xhr.timeout = timeoutMs;
     xhr.setRequestHeader('Accept', 'application/json');
+    if (inMemoryFastApiAuthToken) {
+      xhr.setRequestHeader('Authorization', `Bearer ${inMemoryFastApiAuthToken}`);
+    }
 
     if (signal) {
       if (signal.aborted) {
@@ -194,7 +228,12 @@ export function apiUpload<T>(path: string, options: UploadOptions): Promise<T> {
       reject(
         new ApiClientError({
           message,
-          code: xhr.status === 422 || xhr.status === 400 ? 'VALIDATION_ERROR' : 'HTTP_ERROR',
+          code:
+            xhr.status === 401 || xhr.status === 403
+              ? 'UNAUTHORIZED'
+              : xhr.status === 422 || xhr.status === 400
+                ? 'VALIDATION_ERROR'
+                : 'HTTP_ERROR',
           status: xhr.status,
           fieldErrors,
         })

@@ -18,6 +18,7 @@ import {
   LayoutTemplate,
   Menu,
   PlusSquare,
+  Send,
   Settings,
   X,
 } from 'lucide-react';
@@ -52,6 +53,7 @@ const workspaceNav: NavItem[] = [
   { to: '/projects', label: 'Projects', icon: <FolderKanban className="w-4 h-4" />, end: true },
   { to: '/clips', label: 'Clip Library', icon: <Film className="w-4 h-4" />, end: true },
   { to: '/exports', label: 'Exports', icon: <Download className="w-4 h-4" /> },
+  { to: '/publish', label: 'Publish', icon: <Send className="w-4 h-4" /> },
 ];
 
 const creativeNav: NavItem[] = [

@@ -3,6 +3,7 @@ export type ApiErrorCode =
   | 'NETWORK_ERROR'
   | 'TIMEOUT'
   | 'VALIDATION_ERROR'
+  | 'UNAUTHORIZED'
   | 'NOT_FOUND'
   | 'CONFLICT'
   | 'HTTP_ERROR'

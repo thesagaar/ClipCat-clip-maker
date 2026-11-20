@@ -1,0 +1,1076 @@
+# CLIPCAT — MASTER IMPLEMENTATION PROMPT
+## Feature: AI-Powered Direct Publishing, Automatic Captions, Metadata & Creator Attribution
+
+**Project:** ClipCat  
+**Parent brand:** Single Dimension Projects (SDP)  
+**Feature category:** Video Publishing & Social Media Automation  
+**Target platforms:** YouTube and Instagram  
+**Implementation assistant:** Claude  
+**Priority:** High  
+**Status:** Proposed feature — not yet implemented
+
+---
+
+# 1. YOUR ROLE
+
+Act as a senior full-stack engineer, Python backend architect, AI integration engineer, security engineer and product designer.
+
+Your task is to design and implement a production-oriented **Direct Publishing System** inside the existing ClipCat application.
+
+Do not create a separate application.
+
+Do not rebuild ClipCat from scratch.
+
+Do not replace existing functionality, components, routes, API contracts or design systems unnecessarily.
+
+First inspect the existing repository and understand the current implementation. Then develop this feature incrementally, following the existing architecture.
+
+The finished experience should allow a user to:
+
+1. Create or select a video clip.
+2. Automatically generate captions and subtitles.
+3. Automatically generate an appropriate title, description, hashtags and tags.
+4. Identify available source-owner and creator attribution information.
+5. Prepare platform-specific publishing metadata.
+6. Preview the final publishing package.
+7. Connect their YouTube or Instagram account.
+8. Publish directly from ClipCat.
+9. Track upload progress and publication status.
+10. Access publishing history.
+
+**Core experience: The user should not need to manually type titles, descriptions, hashtags, credits or other routine metadata during upload.**
+
+All information should be automatically prepared before the publishing confirmation screen.
+
+# 2. NON-NEGOTIABLE PROJECT CONSTRAINTS
+
+Maintain the established ClipCat architecture.
+
+| Component | Requirement |
+|---|---|
+| Frontend | Existing React + TypeScript + Vite |
+| Backend | Python + FastAPI |
+| API prefix | `/api` |
+| Database | SQLite |
+| ORM | SQLAlchemy |
+| Validation | Pydantic v2 |
+| Video processing | FFmpeg / FFprobe |
+| Transcription | faster-whisper |
+| Storage | Local filesystem |
+| Network binding | `127.0.0.1` only |
+| Data directory | `%LOCALAPPDATA%\ClipCat\ClipCatData` |
+| Deployment target | Windows local application |
+| Cloud dependency | None for core video processing |
+
+Additional requirements:
+
+- Do not migrate the application to Firebase or a cloud-hosted backend.
+- Do not introduce paid AI APIs as a mandatory dependency.
+- Reuse the existing transcription, rendering and media-processing infrastructure.
+- Keep the publishing module separate from the core clipping workflow.
+- Do not break the existing frontend/backend API contracts.
+- Do not expose credentials in frontend code, logs or analytics.
+- Do not introduce unofficial platform APIs or browser automation.
+- Respect all existing security requirements and remediation findings.
+
+The publishing module may communicate with official social platform APIs over the internet. This does not mean ClipCat's core video-processing backend should become cloud-hosted.
+
+# 3. MAIN FEATURE: DIRECT PUBLISHING
+
+Add a new publishing workflow accessible from:
+
+- Completed clip screen.
+- Clip preview screen.
+- Export screen.
+- Existing clip library.
+- Clip details page.
+
+Add a clearly visible **Publish** action.
+
+The publishing destination selection should include:
+
+### YouTube
+
+- YouTube Shorts.
+- Standard YouTube video uploads where supported.
+
+### Instagram
+
+- Instagram Reels.
+- Eligible professional accounts (Business/Creator) through the supported official publishing API.
+
+Do not advertise unsupported publishing functionality.
+
+The application must verify the connected account's eligibility and API permissions before presenting a publishing option as available.
+
+# 4. AUTOMATIC AI CONTENT GENERATION
+
+This is the most important part of the feature.
+
+ClipCat should prepare the complete publishing package automatically using information already available from the original video, extracted clip, transcript, audio, detected context and source metadata.
+
+The user should not need to manually enter the routine publishing information.
+
+## 4.1 Automatic title generation
+
+Generate a meaningful, engaging title based on:
+
+- Actual video content.
+- Main subject.
+- Most interesting moment.
+- Transcript context.
+- Detected event or topic.
+- Intended platform.
+- Clip duration.
+
+Requirements:
+
+- Avoid misleading clickbait.
+- Do not fabricate events or statements.
+- Avoid unnecessary keyword stuffing.
+- Generate platform-appropriate titles.
+- Respect each platform's current title limits.
+- Generate multiple internal candidates and select the strongest.
+- Allow optional editing before publishing.
+
+Example:
+
+Original transcript:
+"Today we're testing the performance of the new graphics card."
+
+Automatically generated title:
+"Testing the New GPU: Is the Performance Worth It?"
+
+The title must accurately describe the clip.
+
+## 4.2 Automatic descriptions and captions
+
+Generate a platform-specific description automatically.
+
+The description should contain:
+
+1. A short contextual introduction.
+2. A concise explanation of the video.
+3. Relevant information extracted from the transcript.
+4. Creator attribution where available and appropriate.
+5. Original source link where available and appropriate.
+6. Relevant hashtags.
+7. Optional disclosure when the video is edited, transformed or AI-assisted, where required or appropriate.
+
+Do not generate generic descriptions that have no relationship to the actual video.
+
+Do not claim that the user personally created original content if the source indicates otherwise.
+
+## 4.3 Automatic hashtags
+
+Generate relevant hashtags using:
+
+- Main topic.
+- Video subject.
+- Important keywords.
+- Category.
+- Platform conventions.
+- Audience relevance.
+- Language.
+
+Requirements:
+
+- Avoid irrelevant trending hashtags.
+- Avoid repeated hashtags.
+- Avoid misleading tags.
+- Avoid excessive hashtag stuffing.
+- Respect platform-specific restrictions and current limits.
+- Remove prohibited or invalid hashtags when detected.
+- Maintain separate hashtag recommendations for YouTube and Instagram.
+
+Generate hashtags from the actual content rather than relying on generic lists.
+
+## 4.4 Automatic YouTube tags
+
+Generate YouTube video tags based on:
+
+- Main subject.
+- Related keywords.
+- Search intent.
+- Relevant entities.
+- Video topic.
+- Language.
+
+Validate metadata against the official YouTube API requirements.
+
+Do not confuse hashtags in the description with YouTube's separate video tags field.
+
+## 4.5 Automatic language detection
+
+Detect:
+
+- Spoken language.
+- Transcript language.
+- Likely caption language.
+- Relevant metadata language.
+
+Support multilingual content where the installed transcription model supports it.
+
+Do not silently translate a video or change the speaker's meaning.
+
+If translated captions are generated, label them as translations.
+
+# 5. AUTOMATIC SUBTITLES AND VIDEO CAPTIONS
+
+ClipCat already uses local transcription capabilities. Reuse them.
+
+The publishing feature must support two distinct forms of captions:
+
+### A. Captions embedded into the video
+
+Use the existing FFmpeg/ASS subtitle rendering system.
+
+Support:
+
+- Word-level highlighting where reliable timing is available.
+- Sentence-level captions.
+- Adjustable font size.
+- Readable contrast.
+- Appropriate positioning.
+- Safe margins.
+- Platform-friendly vertical layouts.
+- Punctuation correction.
+- Speaker identification only when reliably available.
+
+### B. Separate subtitle files
+
+Support appropriate subtitle formats, including:
+
+- SRT.
+- WebVTT.
+
+Use separate subtitle upload functionality only where the destination platform and API support it.
+
+Do not claim that YouTube or Instagram automatically accepts every subtitle format through every upload API.
+
+### Caption generation rules
+
+- Use actual transcription results.
+- Preserve the speaker's intended meaning.
+- Correct obvious transcription errors using context.
+- Never invent speech.
+- Avoid placing captions over important visual content.
+- Avoid displaying excessively long sentences.
+- Maintain synchronization with the video.
+- Respect existing caption design preferences.
+
+The user should not need to manually create captions during publishing.
+
+# 6. AUTOMATIC ORIGINAL CREATOR ATTRIBUTION AND COPYRIGHT CREDITS
+
+Implement an **Attribution Intelligence System**.
+
+This must be treated as a high-priority feature because ClipCat may process videos originating from different creators.
+
+## 6.1 Information to identify
+
+When available, extract:
+
+- Original creator name.
+- Original channel name.
+- Original account username.
+- Original video title.
+- Original video URL.
+- Source platform.
+- Copyright notice.
+- Creator-provided attribution.
+- Available licence information.
+- Original publication information.
+
+Possible sources:
+
+1. User-provided source URL.
+2. Imported video metadata.
+3. Embedded metadata.
+4. User-provided ownership information.
+5. Official platform metadata obtained through authorized APIs.
+6. Other explicitly supplied source information.
+
+Do not assume that the uploader is the copyright owner.
+
+Do not identify a creator using unsupported guesses or facial recognition.
+
+## 6.2 Attribution generation
+
+When reliable creator information is available, automatically prepare a credit.
+
+Example:
+
+"Original creator: @CreatorUsername  
+Source: Original video title  
+Watch the original: [Source URL]"
+
+For YouTube:
+
+Use appropriate creator/channel information and the original video link when verified.
+
+For Instagram:
+
+Use the verified username and original source link where available and appropriate.
+
+Adapt the format to the destination platform.
+
+## 6.3 Important legal and ethical rules
+
+Attribution is not permission.
+
+Giving credit does not automatically grant the right to reuse copyrighted videos, music, performances or other content.
+
+ClipCat must distinguish:
+
+- Original creator.
+- Copyright owner.
+- Uploader.
+- Licence holder.
+- User who supplied the video.
+
+Never claim that these identities are interchangeable.
+
+Never fabricate:
+
+- Creator names.
+- Channel names.
+- Source URLs.
+- Copyright ownership.
+- Creative Commons licences.
+- Permission to reuse.
+- Public-domain status.
+
+If attribution cannot be verified, use a clear internal state:
+
+`ATTRIBUTION_UNVERIFIED`
+
+Do not invent a credit to fill the gap.
+
+Show the user a concise warning before publication when source ownership or reuse rights are uncertain.
+
+Allow the user to supply or correct attribution information.
+
+## 6.4 Rights and ownership validation
+
+Before publishing, perform a rights-readiness check.
+
+Consider:
+
+- Does the user own the content?
+- Does the user have permission to publish it?
+- Is the source licence compatible with the intended use?
+- Are there third-party copyrighted music or video segments?
+- Is the source attribution verified?
+- Are there restrictions on derivative works or commercial use?
+
+The application must not claim to provide definitive legal clearance.
+
+If rights are unknown, explain that the content needs verification.
+
+Do not block legitimate publishing of the user's own original videos merely because an external creator cannot be identified.
+
+# 7. AUTOMATIC PLATFORM-SPECIFIC METADATA
+
+Prepare separate metadata packages for each destination.
+
+## 7.1 YouTube metadata
+
+Automatically prepare:
+
+- Video title.
+- Description.
+- Hashtags.
+- Tags.
+- Category, when reliably determined.
+- Language.
+- Caption information.
+- Privacy setting.
+- Audience classification.
+- Relevant attribution.
+- Source URL.
+- Optional thumbnail.
+
+Support:
+
+- Private.
+- Unlisted.
+- Public.
+
+Use the YouTube Data API v3.
+
+Use OAuth 2.0 and the officially supported authorization flow for a local desktop application.
+
+Use resumable uploads where supported.
+
+Do not hardcode client secrets or expose OAuth tokens in frontend storage.
+
+Respect API quotas and upload restrictions.
+
+Do not assume every upload will immediately become public or that Shorts classification can be forced through a metadata field. Use the actual platform's current eligibility and processing rules.
+
+Official documentation:
+https://developers.google.com/youtube/v3
+
+## 7.2 Instagram metadata
+
+Automatically prepare:
+
+- Reel caption.
+- Relevant hashtags.
+- Creator attribution.
+- Source reference where appropriate.
+- Video format validation.
+- Cover image where supported.
+- Relevant publishing options exposed by the official API.
+
+Use the official Instagram Platform publishing API.
+
+Support only eligible account types and authorized permissions.
+
+Instagram publishing must be based on the current official API requirements.
+
+Do not request users' Instagram passwords.
+
+Do not automate Instagram's website or simulate manual uploads.
+
+Important architecture constraint:
+
+Instagram's standard publishing workflow requires media to be accessible to Meta. A video stored only on the user's computer cannot simply be passed as a local filesystem path.
+
+Design a secure publishing transfer mechanism only if necessary:
+
+- Temporary upload endpoint or supported media transfer.
+- Short-lived signed access.
+- HTTPS.
+- Strict file validation.
+- Limited access duration.
+- Automatic deletion after the publishing operation or defined expiry.
+- No permanent video storage.
+- No public directory exposure.
+- No arbitrary URL access.
+- No reuse of media access tokens.
+
+Investigate the current supported API flow before implementing this mechanism.
+
+If a compliant temporary transfer mechanism cannot be provided within the local-first architecture, offer export-and-manual-share as a fallback.
+
+Do not falsely advertise fully local Instagram publishing.
+
+Official documentation:
+https://developers.facebook.com/docs/instagram-platform/
+
+# 8. AUTOMATIC CONTENT PACKAGE GENERATOR
+
+Create a centralized service responsible for preparing all publishing metadata.
+
+Suggested internal module:
+
+`PublishingMetadataService`
+
+Possible responsibilities:
+
+- Transcript analysis.
+- Topic extraction.
+- Title generation.
+- Description generation.
+- Hashtag generation.
+- YouTube tag generation.
+- Language detection.
+- Attribution extraction.
+- Rights-readiness assessment.
+- Platform-specific metadata generation.
+- Metadata validation.
+
+The service should use existing local processing results wherever possible.
+
+Avoid adding mandatory paid LLM APIs.
+
+Use deterministic templates and lightweight local NLP fallbacks if a local AI model is unavailable.
+
+The service must clearly distinguish verified information from generated suggestions.
+
+Suggested metadata structure:
+
+```json
+{
+  "clip_id": "clip_id",
+  "language": "en",
+  "generated_at": "ISO-8601",
+  "content": {
+    "title": "Generated title",
+    "description": "Generated description",
+    "hashtags": ["#Technology", "#AI"],
+    "tags": ["technology", "artificial intelligence"],
+    "captions": {
+      "available": true,
+      "embedded": true,
+      "subtitle_file": "optional"
+    }
+  },
+  "attribution": {
+    "status": "verified",
+    "creator_name": "Verified creator",
+    "creator_handle": "@creator",
+    "source_url": "https://example.com/original",
+    "rights_status": "requires_user_confirmation"
+  },
+  "platforms": {
+    "youtube": {
+      "ready": true
+    },
+    "instagram": {
+      "ready": true
+    }
+  }
+}
+```
+
+This is an illustrative schema. Adapt it to existing ClipCat conventions, validation models and API contracts. Do not introduce incompatible data structures.
+
+# 9. PUBLISHING DASHBOARD UI
+
+Follow the existing ClipCat design language.
+
+Maintain:
+
+- Dark interface.
+- Existing purple/lavender accent system.
+- Existing typography.
+- Existing icon conventions.
+- Existing responsive layout.
+- Existing component architecture.
+
+Do not redesign the entire application.
+
+## Required screens/components
+
+### A. Publishing destination selection
+
+Show connected platform accounts.
+
+Display:
+
+- YouTube connection status.
+- Instagram connection status.
+- Account name.
+- Account eligibility.
+- Authorization status.
+- Connect/disconnect controls.
+
+### B. Automatic metadata preview
+
+Show:
+
+- Generated title.
+- Generated description.
+- Captions status.
+- Hashtags.
+- YouTube tags.
+- Attribution information.
+- Source link.
+- Rights-readiness status.
+
+All fields should be automatically populated.
+
+Editing must be optional.
+
+The default workflow must not require manual metadata entry.
+
+### C. Rights and attribution panel
+
+Display one of the following:
+
+- Verified attribution.
+- User-provided attribution.
+- Attribution unavailable.
+- Rights verification required.
+
+Make the difference understandable.
+
+### D. Final publishing preview
+
+Show the actual destination-specific metadata.
+
+Allow users to review what will be published.
+
+Provide a clear final action:
+
+`Publish to YouTube`
+
+or
+
+`Publish to Instagram`
+
+### E. Publishing progress
+
+Display actual progress, including:
+
+- Preparing media.
+- Validating metadata.
+- Uploading.
+- Processing by platform.
+- Published.
+- Failed.
+- Requires attention.
+
+Never use fabricated progress percentages.
+
+### F. Publishing history
+
+Display:
+
+- Clip title.
+- Platform.
+- Account.
+- Publication date.
+- Upload status.
+- Published URL.
+- Error information where relevant.
+
+Support retry for recoverable failures.
+
+Prevent accidental duplicate publishing.
+
+# 10. AUTOMATIC WORKFLOW
+
+Implement the following sequence.
+
+**Step 1 — Clip selection**
+
+User chooses an existing rendered clip.
+
+**Step 2 — Analyze content**
+
+Reuse the existing transcript and media metadata.
+
+**Step 3 — Generate publishing information**
+
+Automatically generate:
+
+- Title.
+- Description.
+- Captions.
+- Hashtags.
+- YouTube tags.
+- Language.
+- Attribution.
+- Platform-specific metadata.
+
+**Step 4 — Validate**
+
+Check:
+
+- Video compatibility.
+- Metadata limits.
+- Caption availability.
+- Account connection.
+- Platform eligibility.
+- Source attribution.
+- Rights-readiness.
+- API authorization.
+- Upload requirements.
+
+**Step 5 — Prepare platform package**
+
+Generate separate YouTube and Instagram publishing packages.
+
+**Step 6 — Preview**
+
+Show the completed package.
+
+Do not require manual typing.
+
+**Step 7 — Confirm**
+
+The user must explicitly approve publishing.
+
+**Step 8 — Upload**
+
+Upload through the official platform API.
+
+**Step 9 — Verify**
+
+Retrieve the actual platform response and publication status.
+
+**Step 10 — Save history**
+
+Save the publication result, platform identifier and relevant metadata.
+
+Never report successful publication merely because a request was sent.
+
+# 11. BACKEND ARCHITECTURE
+
+First inspect the existing backend implementation and determine where publishing belongs.
+
+Suggested logical modules:
+
+```text
+backend/
+  app/
+    publishing/
+      __init__.py
+      router.py
+      schemas.py
+      service.py
+      metadata_service.py
+      attribution_service.py
+      rights_service.py
+      validators.py
+      upload_manager.py
+      history_service.py
+      providers/
+        __init__.py
+        youtube.py
+        instagram.py
+      security/
+        token_storage.py
+        oauth.py
+```
+
+This is a suggested organization, not an instruction to duplicate existing modules.
+
+Possible API capabilities:
+
+- Get connected accounts.
+- Begin platform authorization.
+- Complete authorization.
+- Disconnect account.
+- Generate publishing metadata.
+- Preview destination package.
+- Validate publication readiness.
+- Start publishing.
+- Get upload progress.
+- Get publication status.
+- Retry a failed upload.
+- Retrieve publishing history.
+- Retrieve published URL.
+
+Use existing API conventions and naming wherever possible.
+
+All API input must be validated with Pydantic.
+
+Use strict response schemas.
+
+Add appropriate timeouts, rate limits and error handling.
+
+Implement one active processing job in accordance with existing ClipCat constraints. Publishing should not silently bypass or overload that processing limit.
+
+# 12. SECURITY REQUIREMENTS
+
+Security is mandatory.
+
+Implement:
+
+- Secure OAuth authorization.
+- State parameter validation.
+- PKCE wherever supported by the relevant authorization flow.
+- Secure token storage on Windows.
+- Token refresh handling.
+- Token revocation and disconnection.
+- No credentials in logs.
+- No credentials in frontend localStorage.
+- No hardcoded API secrets.
+- No unrestricted filesystem access.
+- No arbitrary remote URL fetching.
+- No SSRF.
+- Strict upload file validation.
+- Safe temporary-file cleanup.
+- Upload size and duration checks.
+- Duplicate submission prevention.
+- Explicit publishing confirmation.
+- Platform API error handling.
+- Secure handling of short-lived media URLs.
+
+Use Windows Credential Manager or an appropriate Windows secure credential-storage mechanism for OAuth credentials where feasible.
+
+Never treat a connected social account as permission to publish every available video automatically.
+
+Never auto-publish without user confirmation.
+
+# 13. RESOURCE AND PERFORMANCE REQUIREMENTS
+
+The target machine has 8GB RAM.
+
+Requirements:
+
+- Reuse existing transcription output.
+- Avoid transcribing the same clip repeatedly.
+- Avoid unnecessary video re-encoding.
+- Reuse rendered outputs where compatible.
+- Stream large uploads in chunks.
+- Use resumable uploads where supported.
+- Avoid loading complete videos into memory.
+- Clean up temporary files.
+- Avoid background tasks that overwhelm the laptop.
+- Keep the user informed about processing and upload activity.
+
+Do not add heavyweight AI models solely for generating titles and hashtags.
+
+# 14. ERROR HANDLING
+
+Provide clear user-facing errors for:
+
+- Account disconnected.
+- Authorization expired.
+- Insufficient permissions.
+- Unsupported account type.
+- Unsupported video format.
+- Video exceeds platform limits.
+- Invalid metadata.
+- Missing required attribution information.
+- Rights verification required.
+- Upload interrupted.
+- Network unavailable.
+- API quota exceeded.
+- Platform processing failure.
+- Duplicate publication.
+- Instagram media access failure.
+
+Where possible, provide a retry action.
+
+Never discard the locally rendered video because a publishing operation fails.
+
+# 15. ANALYTICS AND PRIVACY
+
+Follow ClipCat's existing analytics restrictions.
+
+Never send the following to analytics:
+
+- Video content.
+- Audio.
+- Transcripts.
+- Captions.
+- Titles or descriptions.
+- Hashtags.
+- Source filenames.
+- Local paths.
+- OAuth tokens.
+- Credentials.
+- Personal account information.
+
+Publishing history may be stored locally for the user's own use.
+
+Do not introduce third-party analytics services as a mandatory dependency.
+
+# 16. TESTING AND ACCEPTANCE CRITERIA
+
+Do not mark this feature complete merely because the UI renders.
+
+Write meaningful tests.
+
+### Metadata tests
+
+- Title generation.
+- Description generation.
+- Hashtag relevance and deduplication.
+- YouTube tag validation.
+- Language detection.
+- Attribution extraction.
+- Missing attribution handling.
+- False attribution prevention.
+- Rights-readiness classification.
+
+### API tests
+
+- OAuth state validation.
+- Account connection and disconnection.
+- Token refresh.
+- Upload initiation.
+- Upload progress.
+- Failed upload handling.
+- Retry handling.
+- Duplicate upload prevention.
+- Publication history.
+
+### Security tests
+
+- Token exposure.
+- Unauthorized publishing.
+- Invalid callback state.
+- Path traversal.
+- SSRF.
+- Malicious filenames.
+- Temporary-file cleanup.
+- Invalid media URLs.
+- Credential leakage.
+
+### Frontend tests
+
+- Account connection UI.
+- Metadata preview.
+- Optional editing.
+- Rights warning.
+- Confirmation workflow.
+- Upload progress.
+- Error display.
+- History.
+- Responsive layouts.
+
+### End-to-end acceptance tests
+
+1. Select an existing ClipCat video.
+2. Generate the publishing package automatically.
+3. Verify title, captions, hashtags and attribution.
+4. Preview YouTube metadata.
+5. Preview Instagram metadata.
+6. Confirm publishing.
+7. Upload to an authorized test account.
+8. Verify the actual platform response.
+9. Verify publishing history.
+10. Confirm that the original local video remains available.
+
+Use test accounts and private/unlisted publishing settings where supported before public release.
+
+# 17. IMPLEMENTATION ORDER
+
+Implement incrementally.
+
+**Phase 1 — Repository inspection and design**
+
+- Inspect existing frontend.
+- Inspect existing backend.
+- Identify reusable transcription, metadata, rendering and API services.
+- Document current API contracts.
+- Identify platform API requirements.
+- Produce an implementation plan.
+
+Do not edit files yet.
+
+**Phase 2 — Metadata engine**
+
+- Automatic title.
+- Description.
+- Captions.
+- Hashtags.
+- YouTube tags.
+- Language.
+- Attribution.
+- Rights-readiness.
+
+Test independently before platform integration.
+
+**Phase 3 — Publishing UI**
+
+- Destination selection.
+- Account connection status.
+- Metadata preview.
+- Attribution panel.
+- Confirmation screen.
+
+Use realistic data only where actual API integration is not yet implemented. Label mock functionality clearly.
+
+**Phase 4 — YouTube integration**
+
+- OAuth.
+- Secure token handling.
+- Metadata submission.
+- Resumable upload.
+- Progress.
+- Publication verification.
+- History.
+
+**Phase 5 — Instagram feasibility and integration**
+
+- Verify current official API capabilities.
+- Verify professional account eligibility.
+- Implement OAuth.
+- Implement secure media transfer if permitted and necessary.
+- Implement publishing.
+- Implement status verification.
+- Provide manual sharing fallback if direct publishing is unavailable.
+
+**Phase 6 — Security and testing**
+
+- Full security review.
+- Platform integration tests.
+- Windows testing.
+- Failure handling.
+- Privacy validation.
+
+**Phase 7 — Production readiness**
+
+- Documentation.
+- User-facing error messages.
+- Account connection instructions.
+- Platform API setup instructions.
+- Release checklist.
+
+# 18. IMPORTANT DEVELOPMENT RULES
+
+Follow these rules throughout the implementation:
+
+1. Inspect before changing.
+2. Never assume an existing API behaves differently from its actual implementation.
+3. Preserve all existing ClipCat features.
+4. Do not replace real functionality with mock implementations.
+5. Do not introduce cloud dependencies into local video processing.
+6. Do not invent creator credits or copyright ownership.
+7. Do not claim attribution grants reuse permission.
+8. Do not use unofficial upload automation.
+9. Do not store social account passwords.
+10. Do not automatically publish without explicit approval.
+11. Do not claim that platform upload succeeded until verified.
+12. Do not claim that a feature is implemented without evidence.
+13. Do not suppress tests or security findings to make a build pass.
+14. Do not make unrelated UI changes.
+15. Do not commit or push changes without authorization.
+
+If a requirement conflicts with an official platform limitation, explain the conflict and propose a compliant alternative rather than silently implementing a workaround.
+
+# 19. REQUIRED FIRST RESPONSE FROM CLAUDE
+
+Before writing code, provide:
+
+1. Your understanding of the feature.
+2. A summary of the existing ClipCat architecture.
+3. Existing reusable frontend and backend modules.
+4. Existing API contracts relevant to publishing.
+5. YouTube API feasibility assessment.
+6. Instagram API feasibility assessment.
+7. OAuth and token-storage plan.
+8. Automatic metadata and attribution design.
+9. Local-first privacy implications.
+10. File-level implementation plan.
+11. Security risks and mitigations.
+12. Testing strategy.
+13. Dependencies that would need to be added.
+14. Known limitations and unresolved decisions.
+
+Identify every proposed feature as one of:
+
+- Already implemented.
+- Reusable existing functionality.
+- New implementation required.
+- Blocked by platform limitations.
+- Requires user or developer configuration.
+
+**Do not start implementation until the repository inspection and implementation plan are complete.**
+
+# FINAL PRODUCT OBJECTIVE
+
+ClipCat should make publishing as effortless as possible.
+
+A user should be able to finish editing a clip and immediately see a complete publishing package prepared for them.
+
+The system should automatically handle:
+
+- Captions and subtitles.
+- Titles.
+- Descriptions.
+- Hashtags.
+- YouTube tags.
+- Language.
+- Creator attribution.
+- Source links.
+- Rights-readiness checks.
+- Platform-specific metadata.
+- Upload preparation.
+- Publishing progress.
+- Publication history.
+
+The user should only need to review the prepared content and explicitly confirm publication.
+
+**The guiding principle: Automate repetitive publishing work without sacrificing accuracy, copyright responsibility, privacy, platform compliance or user control.**
+
+Build this as a reliable, modular extension of ClipCat—not as a disconnected social media uploader.

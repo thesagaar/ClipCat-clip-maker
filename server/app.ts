@@ -1,10 +1,18 @@
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
+import { createActiveJobLock } from './activeJobLock.ts';
 import {
   createChatSpikeRouter,
   type ChatSpikeRouterOptions,
 } from './chatspikeRouter.ts';
+import { createPublishingRouter } from './publishing/publishingRouter.ts';
+import type { FetchLike, OAuthConfig } from './publishing/publishingOAuth.ts';
 
-export function createServerApp(options: ChatSpikeRouterOptions = {}): {
+export interface ServerAppOptions extends ChatSpikeRouterOptions {
+  publishingFetchFn?: FetchLike;
+  publishingOAuthEnvOverrides?: Partial<OAuthConfig>;
+}
+
+export function createServerApp(options: ServerAppOptions = {}): {
   app: Express;
   security: ReturnType<typeof createChatSpikeRouter>['security'];
   dirs: ReturnType<typeof createChatSpikeRouter>['dirs'];
@@ -18,8 +26,21 @@ export function createServerApp(options: ChatSpikeRouterOptions = {}): {
     next();
   });
 
-  const { router, security, dirs } = createChatSpikeRouter(options);
+  const activeJobLock = options.activeJobLock ?? createActiveJobLock();
+  const { router, security, dirs } = createChatSpikeRouter({
+    ...options,
+    activeJobLock,
+  });
   app.use('/api/chatspike', router);
+
+  const { router: publishingRouter } = createPublishingRouter({
+    baseDirs: dirs,
+    security,
+    activeJobLock,
+    fetchFn: options.publishingFetchFn,
+    oauthEnvOverrides: options.publishingOAuthEnvOverrides,
+  });
+  app.use('/api/publishing', publishingRouter);
 
   // Sanitized error handler preventing stack traces or host paths in API responses
   app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {

@@ -1,0 +1,674 @@
+openapi: 3.1.0
+info:
+  title: ClipCat Local Studio API (Proposed Python FastAPI Contract)
+  version: 0.2.0-draft
+  description: >
+    Proposed HTTP contract for the upcoming Windows local Python/FastAPI backend
+    (http://127.0.0.1:8000). Status: BACKEND_NOT_IMPLEMENTED in this workspace;
+    all schemas mirror src/types/* and src/types/api/* with camelCase JSON keys.
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local Windows FastAPI runtime
+
+tags:
+  - name: System
+  - name: Projects
+  - name: Jobs
+  - name: Clips
+  - name: Captions
+  - name: Settings
+  - name: Publishing
+  - name: ChatSpike
+
+components:
+  securitySchemes:
+    InstallBearerAuth:
+      type: http
+      scheme: bearer
+      description: Planned Phase 2 per-install Bearer token for local desktop builds.
+
+  schemas:
+    ApiErrorResponse:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+                properties:
+                  loc:
+                    type: array
+                    items:
+                      oneOf: [{ type: string }, { type: integer }]
+                  msg: { type: string }
+                  type: { type: string }
+        code: { type: string, nullable: true }
+        fieldErrors:
+          type: object
+          additionalProperties: { type: string }
+          nullable: true
+
+    DependencyStatus:
+      type: string
+      enum: [operational, warning, not_installed, unavailable]
+
+    AspectRatio:
+      type: string
+      enum: ['9:16', '16:9', '1:1']
+
+    VideoLayoutMode:
+      type: string
+      enum: [smart_face_tracking, center_crop, blurred_background, split_screen]
+
+    OutputResolution:
+      type: string
+      enum: ['720p', '1080p']
+
+    ProcessingConfig:
+      type: object
+      required:
+        - projectName
+        - desiredClipCount
+        - minDurationSec
+        - preferredDurationSec
+        - maxDurationSec
+        - aspectRatio
+        - layoutMode
+        - captionsEnabled
+        - captionPresetId
+        - captionFontSize
+        - captionPosition
+        - highlightKeywords
+        - wordByWordAnimation
+        - speakerLabels
+        - outputFormat
+        - videoCodec
+        - outputResolution
+        - outputFps
+        - autoProcess
+      properties:
+        projectName: { type: string, minLength: 1, maxLength: 120 }
+        outputDirectory: { type: string, nullable: true }
+        desiredClipCount: { type: integer, minimum: 1, maximum: 30 }
+        minDurationSec: { type: number, minimum: 5, maximum: 300 }
+        preferredDurationSec: { type: number, minimum: 5, maximum: 300 }
+        maxDurationSec: { type: number, minimum: 5, maximum: 300 }
+        aspectRatio: { $ref: '#/components/schemas/AspectRatio' }
+        layoutMode: { $ref: '#/components/schemas/VideoLayoutMode' }
+        captionsEnabled: { type: boolean }
+        captionPresetId: { type: string }
+        captionFontSize: { type: string, enum: [small, medium, large] }
+        captionPosition: { type: string, enum: [top, center, bottom] }
+        highlightKeywords: { type: boolean }
+        wordByWordAnimation: { type: boolean }
+        speakerLabels: { type: boolean }
+        outputFormat: { type: string, enum: [mp4] }
+        videoCodec: { type: string, enum: [h264] }
+        outputResolution: { $ref: '#/components/schemas/OutputResolution' }
+        outputFps: { type: integer, enum: [30, 60] }
+        autoProcess: { type: boolean }
+
+    Project:
+      type: object
+      required: [id, name, sourceType, sourceFilename, clipCount, status, config, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        sourceType: { type: string, enum: [upload, url] }
+        sourceFilename: { type: string }
+        sourceUrl: { type: string, nullable: true }
+        thumbnailUrl: { type: string, nullable: true }
+        durationSec: { type: number, nullable: true }
+        resolution: { type: string, nullable: true }
+        fileSizeBytes: { type: integer, nullable: true }
+        clipCount: { type: integer }
+        status: { type: string, enum: [draft, uploaded, queued, processing, completed, failed, cancelled] }
+        activeJobId: { type: string, nullable: true }
+        config: { $ref: '#/components/schemas/ProcessingConfig' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time, nullable: true }
+        processingDurationSec: { type: number, nullable: true }
+        errorMessage: { type: string, nullable: true }
+
+    ProcessingJob:
+      type: object
+      required: [id, projectId, projectName, status, currentTask, elapsedSec, stages, logs, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        projectName: { type: string }
+        status: { type: string, enum: [queued, running, completed, failed, cancelled] }
+        overallProgress: { type: number, minimum: 0, maximum: 100, nullable: true }
+        currentStageId:
+          type: string
+          nullable: true
+          enum:
+            - video_validation
+            - media_inspection
+            - audio_extraction
+            - speech_transcription
+            - ai_moment_detection
+            - clip_scoring
+            - smart_cropping
+            - caption_generation
+            - video_rendering
+            - export_validation
+        currentTask: { type: string }
+        elapsedSec: { type: number }
+        estimatedRemainingSec: { type: number, nullable: true }
+        stages:
+          type: array
+          items: { type: object }
+        logs:
+          type: array
+          items: { type: object }
+        errorMessage: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Clip:
+      type: object
+      required:
+        - id
+        - projectId
+        - title
+        - description
+        - startSec
+        - endSec
+        - durationSec
+        - aiScore
+        - scoringBreakdown
+        - aspectRatio
+        - layoutMode
+        - resolution
+        - status
+        - captionStatus
+        - exportStatus
+        - captionSettings
+        - createdAt
+        - updatedAt
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        projectName: { type: string, nullable: true }
+        title: { type: string }
+        description: { type: string }
+        startSec: { type: number, minimum: 0 }
+        endSec: { type: number, minimum: 0 }
+        durationSec: { type: number, minimum: 3 }
+        aiScore: { type: number, minimum: 0, maximum: 100 }
+        scoringBreakdown: { type: object }
+        thumbnailUrl: { type: string, nullable: true }
+        previewVideoUrl: { type: string, nullable: true }
+        downloadUrl: { type: string, nullable: true }
+        srtUrl: { type: string, nullable: true }
+        vttUrl: { type: string, nullable: true }
+        metadataUrl: { type: string, nullable: true }
+        aspectRatio: { $ref: '#/components/schemas/AspectRatio' }
+        layoutMode: { $ref: '#/components/schemas/VideoLayoutMode' }
+        resolution: { $ref: '#/components/schemas/OutputResolution' }
+        fileSizeBytes: { type: integer, nullable: true }
+        status: { type: string, enum: [completed, rendering, failed, needs_attention] }
+        captionStatus: { type: string, enum: [applied, disabled, pending, failed] }
+        exportStatus: { type: string, enum: [ready, not_exported, exporting, failed] }
+        captionSettings: { type: object }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        errorMessage: { type: string, nullable: true }
+
+    SystemHealthResponse:
+      type: object
+      required: [status, databaseStatus, activeJobsCount, checkedAt]
+      properties:
+        status: { type: string, enum: [operational, degraded, unavailable] }
+        backendVersion: { type: string, nullable: true }
+        uptimeSec: { type: number, nullable: true }
+        databaseStatus: { $ref: '#/components/schemas/DependencyStatus' }
+        activeJobsCount: { type: integer, minimum: 0 }
+        cpuUsagePercent: { type: number, nullable: true }
+        ramUsedBytes: { type: integer, nullable: true }
+        ramTotalBytes: { type: integer, nullable: true }
+        checkedAt: { type: string, format: date-time }
+
+    AttributionStatus:
+      type: string
+      enum: [verified, user_provided, ATTRIBUTION_UNVERIFIED]
+
+    AttributionVerificationState:
+      type: string
+      enum: [VERIFIED, USER_PROVIDED, UNVERIFIED, NOT_AVAILABLE, REQUIRES_REVIEW]
+
+    PublishStartRequest:
+      type: object
+      required: [clip, platform, userConfirmedPublish, idempotencyKey]
+      properties:
+        clip: { $ref: '#/components/schemas/Clip' }
+        project: { $ref: '#/components/schemas/Project', nullable: true }
+        transcript: { type: object, nullable: true }
+        srtContent: { type: string, nullable: true }
+        vttContent: { type: string, nullable: true }
+        sourceInput: { type: object, nullable: true }
+        platform: { type: string, enum: [youtube, instagram] }
+        overrides: { type: object, nullable: true }
+        includeAiDisclosure: { type: boolean }
+        userConfirmedPublish: { type: boolean, const: true }
+        allowDuplicateRepublish: { type: boolean }
+        idempotencyKey: { type: string, minLength: 4 }
+
+paths:
+  /api/system/health:
+    get:
+      tags: [System]
+      summary: Backend health and resource metrics
+      responses:
+        '200':
+          description: Operational status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SystemHealthResponse' }
+
+  /api/system/dependencies:
+    get:
+      tags: [System]
+      summary: FFmpeg, FFprobe, and faster-whisper availability
+      responses:
+        '200':
+          description: Dependency status matrix
+
+  /api/system/storage:
+    get:
+      tags: [System]
+      summary: ClipCatData storage usage breakdown
+      responses:
+        '200':
+          description: Storage byte metrics
+
+  /api/projects:
+    get:
+      tags: [Projects]
+      summary: List projects
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Project' }
+    post:
+      tags: [Projects]
+      summary: Create draft project
+      responses:
+        '201':
+          description: Created project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+
+  /api/projects/upload:
+    post:
+      tags: [Projects]
+      summary: Multipart video file upload + ffprobe validation
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, name, config]
+              properties:
+                file: { type: string, format: binary }
+                name: { type: string }
+                config: { type: string }
+      responses:
+        '201':
+          description: Uploaded project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '413': { description: File exceeds size limit }
+        '422':
+          description: Invalid video media
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiErrorResponse' }
+
+  /api/projects/from-url:
+    post:
+      tags: [Projects]
+      summary: Create project from SSRF-validated direct video URL
+      responses:
+        '201':
+          description: Imported project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '422':
+          description: Disallowed host, DRM wall, or invalid media URL
+
+  /api/projects/{projectId}:
+    parameters:
+      - in: path
+        name: projectId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Projects]
+      summary: Get project details
+      responses:
+        '200':
+          description: Project
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+    patch:
+      tags: [Projects]
+      summary: Rename project
+      responses:
+        '200':
+          description: Updated project
+    delete:
+      tags: [Projects]
+      summary: Delete project and managed media
+      responses:
+        '204': { description: Deleted }
+
+  /api/projects/{projectId}/process:
+    parameters:
+      - in: path
+        name: projectId
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Projects]
+      summary: Start local FFmpeg/faster-whisper processing job (single active job lock)
+      responses:
+        '202':
+          description: Processing job queued/running
+        '409':
+          description: Another processing job is already active
+
+  /api/projects/{projectId}/transcript:
+    parameters:
+      - in: path
+        name: projectId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Projects]
+      summary: Retrieve transcript segments
+      responses:
+        '200': { description: Transcript }
+
+  /api/projects/{projectId}/clips:
+    parameters:
+      - in: path
+        name: projectId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Projects]
+      summary: List clips for project
+      responses:
+        '200':
+          description: Project clips
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Clip' }
+
+  /api/jobs/{jobId}:
+    parameters:
+      - in: path
+        name: jobId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Jobs]
+      summary: Poll processing job state and stage logs
+      responses:
+        '200':
+          description: Processing job
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProcessingJob' }
+
+  /api/jobs/{jobId}/cancel:
+    parameters:
+      - in: path
+        name: jobId
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Jobs]
+      summary: Cancel active processing job cleanly
+      responses:
+        '200': { description: Cancelled job }
+
+  /api/clips:
+    get:
+      tags: [Clips]
+      summary: List all clips across projects
+      responses:
+        '200':
+          description: Clips list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Clip' }
+
+  /api/clips/{clipId}:
+    parameters:
+      - in: path
+        name: clipId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Clips]
+      summary: Get single clip
+      responses:
+        '200':
+          description: Clip
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Clip' }
+    patch:
+      tags: [Clips]
+      summary: Update clip metadata/draft settings
+      responses:
+        '200': { description: Updated clip }
+    delete:
+      tags: [Clips]
+      summary: Delete clip and sidecar files
+      responses:
+        '204': { description: Deleted }
+
+  /api/clips/{clipId}/render:
+    parameters:
+      - in: path
+        name: clipId
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Clips]
+      summary: Re-render clip with FFmpeg
+      responses:
+        '200': { description: Rendered clip }
+
+  /api/clips/{clipId}/preview:
+    parameters:
+      - in: path
+        name: clipId
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Clips]
+      summary: Stream MP4 with 206 Partial Content Range support
+      responses:
+        '200': { description: Full MP4 }
+        '206': { description: Partial byte range }
+
+  /api/clips/{clipId}/download:
+    parameters:
+      - in: path
+        name: clipId
+        required: true
+        schema: { type: string }
+    head:
+      tags: [Clips]
+      summary: Verify rendered clip file availability
+      responses:
+        '200': { description: Exists }
+    get:
+      tags: [Clips]
+      summary: Download rendered clip as attachment
+      responses:
+        '200': { description: MP4 binary attachment }
+
+  /api/clips/batch-export:
+    post:
+      tags: [Clips]
+      summary: Package selected clips & sidecars into downloadable archive
+      responses:
+        '200': { description: Archive info }
+
+  /api/caption-presets:
+    get:
+      tags: [Captions]
+      summary: List caption presets
+      responses:
+        '200': { description: Presets list }
+    post:
+      tags: [Captions]
+      summary: Create custom caption preset
+      responses:
+        '201': { description: Created preset }
+
+  /api/caption-presets/{presetId}:
+    parameters:
+      - in: path
+        name: presetId
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Captions]
+      summary: Update caption preset
+      responses:
+        '200': { description: Updated preset }
+    delete:
+      tags: [Captions]
+      summary: Delete custom caption preset
+      responses:
+        '204': { description: Deleted }
+
+  /api/caption-presets/restore-defaults:
+    post:
+      tags: [Captions]
+      summary: Restore built-in caption presets
+      responses:
+        '200': { description: Default presets }
+
+  /api/settings:
+    get:
+      tags: [Settings]
+      summary: Read application settings
+      responses:
+        '200': { description: Settings }
+    put:
+      tags: [Settings]
+      summary: Persist application settings
+      responses:
+        '200': { description: Updated settings }
+
+  /api/settings/reset:
+    post:
+      tags: [Settings]
+      summary: Reset settings to defaults
+      responses:
+        '200': { description: Default settings }
+
+  /api/settings/clear-temp:
+    post:
+      tags: [Settings]
+      summary: Clear ClipCatData temp cache
+      responses:
+        '200': { description: Freed byte summary }
+
+  /api/publishing/accounts:
+    get:
+      tags: [Publishing]
+      summary: Connected publishing accounts (never returns tokens/secrets)
+      responses:
+        '200': { description: Accounts & active lock status }
+
+  /api/publishing/oauth/{platform}/start:
+    parameters:
+      - in: path
+        name: platform
+        required: true
+        schema: { type: string, enum: [youtube, instagram] }
+    post:
+      tags: [Publishing]
+      summary: Start OAuth 2.0 + PKCE authorization flow
+      responses:
+        '200': { description: Auth URL, redirect URI, and state }
+
+  /api/publishing/oauth/{platform}/callback:
+    parameters:
+      - in: path
+        name: platform
+        required: true
+        schema: { type: string, enum: [youtube, instagram] }
+    get:
+      tags: [Publishing]
+      summary: Exchange OAuth code on backend and store encrypted credentials
+      responses:
+        '200': { description: HTML postMessage completion page }
+
+  /api/publishing/metadata/generate:
+    post:
+      tags: [Publishing]
+      summary: Zero-typing auto-generated metadata, tags vs hashtags, captions, and honest attribution
+      responses:
+        '200': { description: PublishMetadataPackage }
+
+  /api/publishing/validate:
+    post:
+      tags: [Publishing]
+      summary: Validate platform specs, rights readiness, and duplicate warnings
+      responses:
+        '200': { description: Validation result }
+
+  /api/publishing/start:
+    post:
+      tags: [Publishing]
+      summary: Execute confirmed direct publish upload (requires userConfirmedPublish=true)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublishStartRequest' }
+      responses:
+        '202': { description: Publish job started }
+        '409': { description: Active job conflict }
+        '422': { description: Confirmation or validation failed }
+
+  /api/publishing/manual-share-package:
+    post:
+      tags: [Publishing]
+      summary: Export metadata/attribution/SRT manual share package when IG HTTPS relay is unavailable
+      responses:
+        '200': { description: JSON bundle download }
+
+  /api/publishing/history:
+    get:
+      tags: [Publishing]
+      summary: List local publishing history records
+      responses:
+        '200': { description: Publish history items }

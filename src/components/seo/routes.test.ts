@@ -31,6 +31,8 @@ describe('ClipCat route SEO metadata and footer link integrity', () => {
       '/clips',
       '/clips/clip-1/edit',
       '/exports',
+      '/publish',
+      '/publish/clip-1',
       '/presets',
       '/templates',
       '/settings',

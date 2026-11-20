@@ -6,6 +6,7 @@ import {
   Film,
   Play,
   RefreshCw,
+  Send,
   Square,
   Trash2,
 } from 'lucide-react';
@@ -138,6 +139,11 @@ export function ClipCard({
             >
               Download
             </Button>
+            <Link to={`/publish/${clip.id}`}>
+              <Button variant="primary" size="sm" icon={<Send className="w-3.5 h-3.5" />}>
+                Publish
+              </Button>
+            </Link>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <Button

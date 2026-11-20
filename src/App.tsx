@@ -37,6 +37,9 @@ const ClipEditorPage = lazy(() =>
 const ExportManagerPage = lazy(() =>
   import('./pages/ExportManagerPage').then((m) => ({ default: m.ExportManagerPage }))
 );
+const PublishPage = lazy(() =>
+  import('./pages/PublishPage').then((m) => ({ default: m.PublishPage }))
+);
 const CaptionPresetsPage = lazy(() =>
   import('./pages/CaptionPresetsPage').then((m) => ({ default: m.CaptionPresetsPage }))
 );
@@ -107,6 +110,8 @@ export default function App() {
                 <Route path="/clips" element={<ClipLibraryPage />} />
                 <Route path="/clips/:id/edit" element={<ClipEditorPage />} />
                 <Route path="/exports" element={<ExportManagerPage />} />
+                <Route path="/publish" element={<PublishPage />} />
+                <Route path="/publish/:id" element={<PublishPage />} />
                 <Route path="/presets" element={<CaptionPresetsPage />} />
                 <Route path="/templates" element={<TemplatesPage />} />
                 <Route path="/settings" element={<SettingsPage />} />

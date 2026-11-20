@@ -698,14 +698,16 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <div className="pt-2 border-t border-ios-sep">
-          <Toggle
-            checked={mockModeEnabled}
-            onChange={(checked) => setMockModeEnabled(checked)}
-            label="Isolated Development Mock Adapter (VITE_USE_MOCK_API)"
-            description={`When enabled, ClipCat serves explicitly labeled sample data in-memory instead of querying ${getApiBaseUrl()}.`}
-          />
-        </div>
+        {!ENV.IS_PROD && (
+          <div className="pt-2 border-t border-ios-sep">
+            <Toggle
+              checked={mockModeEnabled}
+              onChange={(checked) => setMockModeEnabled(checked)}
+              label="Isolated Development Mock Adapter (VITE_USE_MOCK_API)"
+              description={`When enabled, ClipCat serves explicitly labeled sample data in-memory instead of querying ${getApiBaseUrl()}.`}
+            />
+          </div>
+        )}
       </section>
 
       {/* ABOUT CLIPCAT (SDP OWNERSHIP & PRODUCT IDENTITY) */}

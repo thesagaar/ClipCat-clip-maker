@@ -95,11 +95,15 @@ export function sanitizeRouteIdentifier(rawRoute: string): string {
   if (/^\/clips\/[^/]+\/edit\/?$/.test(normalized)) {
     return '/clips/:id/edit';
   }
+  if (/^\/publish\/[^/]+\/?$/.test(normalized)) {
+    return '/publish/:id';
+  }
   const knownStatic = [
     '/projects/new',
     '/projects',
     '/clips',
     '/exports',
+    '/publish',
     '/presets',
     '/templates',
     '/settings',

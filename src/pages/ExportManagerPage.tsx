@@ -7,6 +7,7 @@ import {
   Film,
   FolderOpen,
   Image as ImageIcon,
+  Send,
 } from 'lucide-react';
 import { trackAnalyticsEvent } from '../analytics/client';
 import { batchExportClips, getClipDownloadUrl, resolveClipAssetUrl } from '../api';
@@ -263,6 +264,16 @@ export function ExportManagerPage() {
                     >
                       Metadata JSON
                     </Button>
+                    <Link to={`/publish/${clip.id}`} className="col-span-2">
+                      <Button
+                        variant="accent-purple"
+                        size="sm"
+                        className="w-full"
+                        icon={<Send className="w-3.5 h-3.5" />}
+                      >
+                        Publish Clip
+                      </Button>
+                    </Link>
                   </div>
                 </article>
               );
@@ -398,6 +409,15 @@ export function ExportManagerPage() {
                               )
                             }
                           />
+                          <Link to={`/publish/${clip.id}`}>
+                            <Button
+                              variant="accent-purple"
+                              size="sm"
+                              icon={<Send className="w-3.5 h-3.5" />}
+                            >
+                              Publish
+                            </Button>
+                          </Link>
                         </div>
                       </td>
                     </tr>

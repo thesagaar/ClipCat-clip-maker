@@ -46,10 +46,11 @@ export const useUiStore = create<UiState>()(
       mobileNavOpen: false,
       projectViewMode: 'grid',
       mockModeEnabled:
-        ENV.USE_MOCK_API ||
-        (ENV.IS_DEV &&
-          typeof window !== 'undefined' &&
-          new URLSearchParams(window.location.search).get('mock') === '1'),
+        !ENV.IS_PROD &&
+        (ENV.USE_MOCK_API ||
+          (ENV.IS_DEV &&
+            typeof window !== 'undefined' &&
+            new URLSearchParams(window.location.search).get('mock') === '1')),
       themeMode: 'dark',
       smartFramingAspectRatio: '9:16',
       toasts: [],
@@ -65,6 +66,11 @@ export const useUiStore = create<UiState>()(
       setProjectViewMode: (mode) => set({ projectViewMode: mode }),
 
       setMockModeEnabled: (enabled) => {
+        if (ENV.IS_PROD) {
+          setRuntimeMockMode(false);
+          set({ mockModeEnabled: false });
+          return;
+        }
         setRuntimeMockMode(enabled);
         set({ mockModeEnabled: enabled });
       },
