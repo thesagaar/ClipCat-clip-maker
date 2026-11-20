@@ -51,7 +51,7 @@ export interface ActiveQueueProjectItem {
   projectName: string;
   clipCount: number;
   phase: 'transcribing' | 'rendering' | 'queued';
-  progressPercent: number;
+  progressPercent: number | null;
   currentTask: string;
 }
 
@@ -60,7 +60,7 @@ export interface ProcessingQueueSummary {
   transcribingClipsCount: number;
   renderingClipsCount: number;
   activeProjectsCount: number;
-  progressPercent: number;
+  progressPercent: number | null;
   hasActiveQueue: boolean;
   activeProjectItems: ActiveQueueProjectItem[];
 }
@@ -85,7 +85,7 @@ export function buildProcessingQueueSummary(
   let transcribingClipsCount = 0;
   let renderingClipsCount = 0;
   let weightedProgressSum = 0;
-  let weightedClipDenom = 0;
+  let weightedReportedDenom = 0;
   const activeProjectItems: ActiveQueueProjectItem[] = [];
 
   for (const project of activeProjects) {
@@ -106,22 +106,24 @@ export function buildProcessingQueueSummary(
       transcribingClipsCount += clipCount;
     }
 
-    const rawProgress =
+    const reportedProgress: number | null =
       typeof job?.overallProgress === 'number' && Number.isFinite(job.overallProgress)
         ? Math.min(100, Math.max(0, Math.round(job.overallProgress)))
         : project.status === 'queued'
           ? 0
-          : 10;
+          : null;
 
-    weightedProgressSum += rawProgress * clipCount;
-    weightedClipDenom += clipCount;
+    if (reportedProgress !== null) {
+      weightedProgressSum += reportedProgress * clipCount;
+      weightedReportedDenom += clipCount;
+    }
 
     activeProjectItems.push({
       projectId: project.id,
       projectName: project.name,
       clipCount,
       phase,
-      progressPercent: rawProgress,
+      progressPercent: reportedProgress,
       currentTask:
         job?.currentTask ||
         (phase === 'queued'
@@ -137,15 +139,15 @@ export function buildProcessingQueueSummary(
 
   if (standaloneRenderingClips > 0) {
     renderingClipsCount += standaloneRenderingClips;
-    weightedProgressSum += 50 * standaloneRenderingClips;
-    weightedClipDenom += standaloneRenderingClips;
   }
 
   const totalActiveClipsCount = transcribingClipsCount + renderingClipsCount;
   const progressPercent =
-    totalActiveClipsCount > 0 && weightedClipDenom > 0
-      ? Math.min(100, Math.max(0, Math.round(weightedProgressSum / weightedClipDenom)))
-      : 0;
+    totalActiveClipsCount === 0
+      ? 0
+      : weightedReportedDenom > 0
+        ? Math.min(100, Math.max(0, Math.round(weightedProgressSum / weightedReportedDenom)))
+        : null;
 
   return {
     totalActiveClipsCount,

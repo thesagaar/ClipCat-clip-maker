@@ -7,6 +7,7 @@ import {
   getFastApiAuthHeader,
   hasFastApiAuthToken,
   isMockApiEnabled,
+  resolveMockApiEnabled,
   setFastApiAuthToken,
   setRuntimeMockMode,
 } from './client';
@@ -58,6 +59,39 @@ test('mock mode defaults to false and can be toggled explicitly in runtime', () 
   setRuntimeMockMode(false);
   assert.equal(isMockApiEnabled(), false);
   setRuntimeMockMode(null);
+});
+
+test('resolveMockApiEnabled blocks all mock overrides in production mode while supporting dev ?mock=1', () => {
+  assert.equal(
+    resolveMockApiEnabled({
+      isProd: true,
+      isDev: false,
+      useMockEnv: true,
+      runtimeOverride: true,
+      search: '?mock=1',
+    }),
+    false
+  );
+  assert.equal(
+    resolveMockApiEnabled({
+      isProd: false,
+      isDev: true,
+      useMockEnv: false,
+      runtimeOverride: null,
+      search: '?mock=1',
+    }),
+    true
+  );
+  assert.equal(
+    resolveMockApiEnabled({
+      isProd: false,
+      isDev: true,
+      useMockEnv: false,
+      runtimeOverride: false,
+      search: '?mock=1',
+    }),
+    false
+  );
 });
 
 test('setFastApiAuthToken injects in-memory Bearer header and maps 401/409/422 responses', async () => {

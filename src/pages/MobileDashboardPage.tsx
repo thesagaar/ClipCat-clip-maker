@@ -26,6 +26,7 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { Skeleton } from '../components/ui/Skeleton';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
 import { BRAND } from '../config/brand';
+import { ENV } from '../config/env';
 import {
   useActiveJobsQuery,
   useAllClipsQuery,
@@ -146,7 +147,7 @@ export function MobileDashboardPage() {
             storageQuery.refetch();
           }}
           secondaryAction={
-            !mockModeEnabled ? (
+            ENV.IS_DEV && !mockModeEnabled ? (
               <Button
                 variant="secondary"
                 size="sm"

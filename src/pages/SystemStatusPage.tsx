@@ -112,7 +112,7 @@ export function SystemStatusPage() {
           title="FastAPI Health Endpoints Unreachable"
           onRetry={handleRefreshAll}
           secondaryAction={
-            !mockModeEnabled ? (
+            ENV.IS_DEV && !mockModeEnabled ? (
               <Button
                 variant="secondary"
                 size="sm"

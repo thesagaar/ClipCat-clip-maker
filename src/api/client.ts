@@ -51,19 +51,35 @@ export function setRuntimeMockMode(enabled: boolean | null): void {
   mockModeRuntimeOverride = enabled;
 }
 
-export function isMockApiEnabled(): boolean {
-  // Never allow mock mode bypass in production builds via runtime state or URL params
-  if (ENV.IS_PROD) {
+export function resolveMockApiEnabled(params: {
+  isProd: boolean;
+  isDev: boolean;
+  useMockEnv: boolean;
+  runtimeOverride: boolean | null;
+  search?: string;
+}): boolean {
+  // Never allow mock mode bypass in production builds via runtime state, env, or URL params
+  if (params.isProd) {
     return false;
   }
-  if (mockModeRuntimeOverride !== null) {
-    return mockModeRuntimeOverride;
+  if (params.runtimeOverride !== null) {
+    return params.runtimeOverride;
   }
-  if (ENV.IS_DEV && typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('mock') === '1') return true;
+  if (params.isDev && params.search) {
+    const query = new URLSearchParams(params.search);
+    if (query.get('mock') === '1') return true;
   }
-  return ENV.USE_MOCK_API;
+  return params.useMockEnv;
+}
+
+export function isMockApiEnabled(): boolean {
+  return resolveMockApiEnabled({
+    isProd: ENV.IS_PROD,
+    isDev: ENV.IS_DEV,
+    useMockEnv: ENV.USE_MOCK_API,
+    runtimeOverride: mockModeRuntimeOverride,
+    search: typeof window !== 'undefined' ? window.location.search : undefined,
+  });
 }
 
 export function buildApiUrl(path: string): string {

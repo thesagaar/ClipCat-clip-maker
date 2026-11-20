@@ -235,10 +235,22 @@ test('buildProcessingQueueSummary aggregates transcribing and rendering clips ac
   assert.equal(summary.renderingClipsCount, 7); // 6 from p2 + 1 standalone c2
   assert.equal(summary.totalActiveClipsCount, 11);
   assert.equal(summary.activeProjectsCount, 2);
-  // Weighted avg: (40*4 + 80*6 + 50*1) / 11 = 690 / 11 = 62.7 -> 63
-  assert.equal(summary.progressPercent, 63);
+  // Weighted avg uses only real reported progress: (40*4 + 80*6) / 10 = 64
+  assert.equal(summary.progressPercent, 64);
   assert.equal(summary.hasActiveQueue, true);
   assert.equal(summary.activeProjectItems.length, 2);
+});
+
+test('buildProcessingQueueSummary keeps progressPercent null instead of fabricating percentages when backend reports null', () => {
+  const summary = buildProcessingQueueSummary(
+    [makeProject('p1', 'processing', 3, 'j1')],
+    [],
+    [makeJob('j1', 'p1', 'speech_transcription', null)]
+  );
+
+  assert.equal(summary.totalActiveClipsCount, 3);
+  assert.equal(summary.progressPercent, null);
+  assert.equal(summary.activeProjectItems[0]?.progressPercent, null);
 });
 
 test('buildProcessingQueueSummary returns clean idle state when nothing is queued or rendering', () => {

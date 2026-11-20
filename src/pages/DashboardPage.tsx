@@ -27,6 +27,7 @@ import { OptimizedImage } from '../components/ui/OptimizedImage';
 import { Skeleton } from '../components/ui/Skeleton';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
 import { BRAND } from '../config/brand';
+import { ENV } from '../config/env';
 import { MobileDashboardPage } from './MobileDashboardPage';
 import {
   useActiveJobsQuery,
@@ -170,7 +171,7 @@ export function DashboardPage() {
             storageQuery.refetch();
           }}
           secondaryAction={
-            !mockModeEnabled ? (
+            ENV.IS_DEV && !mockModeEnabled ? (
               <Button
                 variant="secondary"
                 size="sm"

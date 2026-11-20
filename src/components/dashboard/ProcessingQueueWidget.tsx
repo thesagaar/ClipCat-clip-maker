@@ -84,9 +84,14 @@ export function ProcessingQueueWidget({
       {isLoading ? (
         <Skeleton className={compact ? 'h-16 w-full' : 'h-20 w-full'} />
       ) : isError ? (
-        <p className="text-xs text-ios-secondary">
-          Processing queue telemetry will appear once the backend is connected or sample mode is active.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ios-secondary">
+          <span>
+            Queue unavailable: connect the local FastAPI backend to monitor real processing jobs.
+          </span>
+          <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-ios-bg border border-ios-sep text-ios-orange">
+            BACKEND_NOT_CONNECTED
+          </span>
+        </div>
       ) : (
         <div className="space-y-3">
           {/* Progress Bar Row */}
@@ -119,7 +124,9 @@ export function ProcessingQueueWidget({
                 data-testid="processing-queue-percent"
                 className="font-mono font-bold text-ios-label tabular-nums"
               >
-                {summary.progressPercent}%
+                {summary.progressPercent !== null
+                  ? `${summary.progressPercent}%`
+                  : 'In progress…'}
               </span>
             </div>
 
@@ -129,15 +136,22 @@ export function ProcessingQueueWidget({
               aria-label="Active clips processing queue progress"
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-valuenow={summary.progressPercent}
+              aria-valuenow={summary.progressPercent ?? undefined}
               className="h-2.5 w-full rounded-full bg-ios-bg border border-ios-sep overflow-hidden"
             >
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-300',
-                  summary.hasActiveQueue ? 'bg-[#7040DC]' : 'bg-ios-tertiary'
+                  summary.hasActiveQueue ? 'bg-[#7040DC]' : 'bg-ios-tertiary',
+                  summary.hasActiveQueue &&
+                    summary.progressPercent === null &&
+                    'w-1/2 motion-safe:animate-pulse'
                 )}
-                style={{ width: `${summary.progressPercent}%` }}
+                style={
+                  summary.progressPercent !== null
+                    ? { width: `${summary.progressPercent}%` }
+                    : undefined
+                }
               />
             </div>
           </div>
@@ -159,7 +173,7 @@ export function ProcessingQueueWidget({
                         : item.phase === 'queued'
                           ? 'Queued'
                           : 'Transcribing'}{' '}
-                      ({item.progressPercent}%)
+                      ({item.progressPercent !== null ? `${item.progressPercent}%` : 'active'})
                     </p>
                   </div>
                   <Link
