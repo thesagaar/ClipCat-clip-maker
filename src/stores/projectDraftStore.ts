@@ -6,6 +6,7 @@ import type {
   SourceVideoMetadata,
   UrlValidationResult,
 } from '../types/project';
+import { useUiStore } from './uiStore';
 
 interface ProjectDraftState {
   inputMode: ProjectSourceType;
@@ -29,6 +30,7 @@ const initialConfig: ProcessingConfig = {
   projectName: '',
   outputDirectory: '',
   ...DEFAULT_PROCESSING_CONFIG,
+  aspectRatio: useUiStore.getState().smartFramingAspectRatio,
 };
 
 export const useProjectDraftStore = create<ProjectDraftState>((set, get) => ({
@@ -100,7 +102,10 @@ export const useProjectDraftStore = create<ProjectDraftState>((set, get) => ({
       fileMetadata: null,
       videoUrlInput: '',
       urlValidation: null,
-      config: { ...initialConfig },
+      config: {
+        ...initialConfig,
+        aspectRatio: useUiStore.getState().smartFramingAspectRatio,
+      },
     });
   },
 }));

@@ -79,7 +79,7 @@ export function ClipCard({
         <Link
           to={`/clips/${clip.id}/edit`}
           aria-label={`Preview ${clip.title}`}
-          className="w-11 h-11 rounded-full bg-black/75 backdrop-blur-md border border-white/20 hover:border-ios-blue text-white flex items-center justify-center transition-colors"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/75 backdrop-blur-md border border-white/20 hover:border-ios-blue text-white flex items-center justify-center transition-colors"
         >
           <Play className="w-4 h-4 ml-0.5" />
         </Link>

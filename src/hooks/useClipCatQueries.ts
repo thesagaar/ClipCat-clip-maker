@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   cancelJob,
   clearTemporaryFiles,
@@ -33,6 +33,7 @@ import type {
   ClipUpdateRequest,
   CreateCaptionPresetRequest,
   ProcessingConfig,
+  Project,
   UpdateCaptionPresetRequest,
 } from '../types';
 
@@ -116,6 +117,24 @@ export function useJobPollingQuery(jobId: string | undefined, enabled = true) {
       return 2000;
     },
     retry: 1,
+  });
+}
+
+export function useActiveJobsQuery(projects: readonly Project[]) {
+  const activeJobProjects = projects.filter(
+    (p): p is Project & { activeJobId: string } =>
+      (p.status === 'processing' || p.status === 'queued') &&
+      typeof p.activeJobId === 'string' &&
+      p.activeJobId.length > 0
+  );
+
+  return useQueries({
+    queries: activeJobProjects.map((project) => ({
+      queryKey: queryKeys.job(project.activeJobId),
+      queryFn: () => getJob(project.activeJobId),
+      refetchInterval: 2500,
+      retry: 1,
+    })),
   });
 }
 

@@ -1,13 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Clip } from '../../types/clip';
+import type { ProcessingJob } from '../../types/job';
 import type { Project } from '../../types/project';
 import {
   QUICK_START_DISMISSED_KEY,
+  buildProcessingQueueSummary,
   buildStudioActivityBreakdown,
   getRecentCompletedClips,
   isQuickStartVisible,
   markQuickStartDismissed,
+  normalizeSmartFramingAspectRatio,
 } from './dashboardWidgetUtils';
 
 const baseConfig: Project['config'] = {
@@ -32,7 +35,12 @@ const baseConfig: Project['config'] = {
   autoProcess: true,
 };
 
-function makeProject(id: string, status: Project['status']): Project {
+function makeProject(
+  id: string,
+  status: Project['status'],
+  desiredClipCount = 5,
+  activeJobId?: string
+): Project {
   return {
     id,
     name: `Project ${id}`,
@@ -42,7 +50,35 @@ function makeProject(id: string, status: Project['status']): Project {
     fileSizeBytes: 1024,
     clipCount: status === 'completed' ? 3 : 0,
     status,
-    config: baseConfig,
+    activeJobId: activeJobId ?? null,
+    config: {
+      ...baseConfig,
+      desiredClipCount,
+    },
+    createdAt: '2026-11-15T00:00:00Z',
+    updatedAt: '2026-11-15T00:00:00Z',
+  };
+}
+
+function makeJob(
+  id: string,
+  projectId: string,
+  currentStageId: ProcessingJob['currentStageId'],
+  overallProgress: number | null,
+  status: ProcessingJob['status'] = 'running'
+): ProcessingJob {
+  return {
+    id,
+    projectId,
+    projectName: `Project ${projectId}`,
+    status,
+    overallProgress,
+    currentStageId,
+    currentTask: `Running ${currentStageId}`,
+    elapsedSec: 25,
+    estimatedRemainingSec: 40,
+    stages: [],
+    logs: [],
     createdAt: '2026-11-15T00:00:00Z',
     updatedAt: '2026-11-15T00:00:00Z',
   };
@@ -165,4 +201,57 @@ test('Quick Start visibility stays true for first-time visitor and false once di
   markQuickStartDismissed(mockStorage);
   assert.equal(mem.get(QUICK_START_DISMISSED_KEY), '1');
   assert.equal(isQuickStartVisible(mockStorage), false);
+});
+
+test('normalizeSmartFramingAspectRatio accepts 9:16, 1:1, 16:9 and falls back to 9:16', () => {
+  assert.equal(normalizeSmartFramingAspectRatio('9:16'), '9:16');
+  assert.equal(normalizeSmartFramingAspectRatio('1:1'), '1:1');
+  assert.equal(normalizeSmartFramingAspectRatio('16:9'), '16:9');
+  assert.equal(normalizeSmartFramingAspectRatio('4:5'), '9:16');
+  assert.equal(normalizeSmartFramingAspectRatio(undefined), '9:16');
+});
+
+test('buildProcessingQueueSummary aggregates transcribing and rendering clips across active projects and standalone clip renders', () => {
+  const projects: Project[] = [
+    makeProject('p1', 'processing', 4, 'j1'),
+    makeProject('p2', 'processing', 6, 'j2'),
+    makeProject('p3', 'completed', 5),
+  ];
+  const jobs: ProcessingJob[] = [
+    makeJob('j1', 'p1', 'speech_transcription', 40),
+    makeJob('j2', 'p2', 'video_rendering', 80),
+  ];
+  const clips: Clip[] = [
+    // Belongs to already-active project p2 -> must not double count
+    makeClip('c1', 'p2', 'rendering'),
+    // Standalone re-render on completed project p3 -> must be counted as rendering
+    makeClip('c2', 'p3', 'rendering'),
+    makeClip('c3', 'p3', 'completed'),
+  ];
+
+  const summary = buildProcessingQueueSummary(projects, clips, jobs);
+
+  assert.equal(summary.transcribingClipsCount, 4);
+  assert.equal(summary.renderingClipsCount, 7); // 6 from p2 + 1 standalone c2
+  assert.equal(summary.totalActiveClipsCount, 11);
+  assert.equal(summary.activeProjectsCount, 2);
+  // Weighted avg: (40*4 + 80*6 + 50*1) / 11 = 690 / 11 = 62.7 -> 63
+  assert.equal(summary.progressPercent, 63);
+  assert.equal(summary.hasActiveQueue, true);
+  assert.equal(summary.activeProjectItems.length, 2);
+});
+
+test('buildProcessingQueueSummary returns clean idle state when nothing is queued or rendering', () => {
+  const summary = buildProcessingQueueSummary(
+    [makeProject('p1', 'completed', 5)],
+    [makeClip('c1', 'p1', 'completed')],
+    []
+  );
+
+  assert.equal(summary.totalActiveClipsCount, 0);
+  assert.equal(summary.transcribingClipsCount, 0);
+  assert.equal(summary.renderingClipsCount, 0);
+  assert.equal(summary.activeProjectsCount, 0);
+  assert.equal(summary.progressPercent, 0);
+  assert.equal(summary.hasActiveQueue, false);
 });

@@ -9,7 +9,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { trackAnalyticsEvent } from '../analytics/client';
-import { batchExportClips, buildApiUrl, getClipDownloadUrl } from '../api';
+import { batchExportClips, getClipDownloadUrl, resolveClipAssetUrl } from '../api';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -53,7 +53,7 @@ export function ExportManagerPage() {
       });
       return;
     }
-    const fullUrl = url.startsWith('http') ? url : buildApiUrl(url);
+    const fullUrl = resolveClipAssetUrl(url);
     const fmt = label.toLowerCase().includes('srt')
       ? 'srt'
       : label.toLowerCase().includes('vtt')
@@ -90,7 +90,10 @@ export function ExportManagerPage() {
         formats: ['mp4', 'srt', 'vtt', 'json'],
       });
       if (resp.archiveUrl) {
-        const res = await triggerVerifiedDownload(resp.archiveUrl, 'clipcat_all_exports.zip');
+        const res = await triggerVerifiedDownload(
+          resolveClipAssetUrl(resp.archiveUrl),
+          'clipcat_all_exports.zip'
+        );
         if (res.started) {
           trackAnalyticsEvent('export_completed', { exportFormat: 'zip', clipCount: clips.length });
         } else {

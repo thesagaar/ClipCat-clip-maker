@@ -6,4 +6,5 @@ export * from './clips';
 export * from './captions';
 export * from './settings';
 export * from './system';
+export * from './chatspike';
 export { DEFAULT_CAPTION_PRESETS, DEFAULT_APP_SETTINGS } from './mockAdapter';

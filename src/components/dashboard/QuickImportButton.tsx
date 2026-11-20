@@ -43,7 +43,7 @@ export function QuickImportButton({
 }: QuickImportButtonProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { addToast, addNotification } = useUiStore();
+  const { addToast, addNotification, smartFramingAspectRatio } = useUiStore();
 
   const [open, setOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
@@ -147,6 +147,7 @@ export function QuickImportButton({
       projectName: candidateName,
       outputDirectory: '',
       ...DEFAULT_PROCESSING_CONFIG,
+      aspectRatio: smartFramingAspectRatio,
       autoProcess: true,
     };
 
@@ -248,7 +249,7 @@ export function QuickImportButton({
               Drop a video link here or enter it below
             </p>
             <p className="text-[11px] text-ios-secondary">
-              Uses studio defaults ({DEFAULT_PROCESSING_CONFIG.aspectRatio},{' '}
+              Uses studio defaults ({smartFramingAspectRatio},{' '}
               {DEFAULT_PROCESSING_CONFIG.outputResolution},{' '}
               {DEFAULT_PROCESSING_CONFIG.desiredClipCount} clips)
             </p>

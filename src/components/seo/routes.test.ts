@@ -25,6 +25,7 @@ describe('ClipCat route SEO metadata and footer link integrity', () => {
     const privatePaths = [
       '/projects',
       '/projects/new',
+      '/chatspike',
       '/projects/proj-1/processing',
       '/projects/proj-1/clips',
       '/clips',

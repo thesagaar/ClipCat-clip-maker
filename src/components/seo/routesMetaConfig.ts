@@ -54,6 +54,18 @@ export const ROUTE_META_DEFINITIONS: readonly RouteMetaDefinition[] = [
     ],
   },
   {
+    pattern: '/chatspike',
+    title: 'ChatSpike Intelligence — ClipCat',
+    description: 'Detect audience reaction spikes from chat logs and automatically cut highlight video clips locally with FFmpeg.',
+    robots: 'noindex, nofollow',
+    pageGroup: 'chatspike',
+    headerTitle: 'ChatSpike Intelligence',
+    breadcrumbs: [
+      { label: 'Workspace', to: '/' },
+      { label: 'ChatSpike Intelligence' },
+    ],
+  },
+  {
     pattern: '/projects',
     title: 'Projects — ClipCat',
     description: 'Manage your ClipCat video clipping projects, processing status, and generated clips.',

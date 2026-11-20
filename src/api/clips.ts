@@ -5,16 +5,46 @@ import type {
   ClipRenderRequest,
   ClipUpdateRequest,
 } from '../types/clip';
+import {
+  batchExportChatSpikeClips,
+  deleteChatSpikeLibraryClip,
+  getChatSpikeLibrary,
+  isChatSpikeEntityId,
+  renderChatSpikeLibraryClip,
+  updateChatSpikeLibraryClip,
+} from './chatspike';
 import { apiRequest, buildApiUrl, isMockApiEnabled } from './client';
 import { ApiClientError } from './errors';
 import { mockApiState, simulateMockLatency } from './mockAdapter';
+
+export function resolveClipAssetUrl(rawUrl: string): string {
+  if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+    return rawUrl;
+  }
+  if (rawUrl.startsWith('/api/chatspike/')) {
+    return rawUrl;
+  }
+  return buildApiUrl(rawUrl);
+}
 
 export async function listAllClips(): Promise<Clip[]> {
   if (isMockApiEnabled()) {
     await simulateMockLatency();
     return structuredClone(mockApiState.clips);
   }
-  return apiRequest<Clip[]>('/api/clips');
+  const [fastApiRes, chatSpikeRes] = await Promise.allSettled([
+    apiRequest<Clip[]>('/api/clips'),
+    getChatSpikeLibrary(),
+  ]);
+
+  const fastClips = fastApiRes.status === 'fulfilled' ? fastApiRes.value : [];
+  const csClips = chatSpikeRes.status === 'fulfilled' ? chatSpikeRes.value.clips : [];
+
+  if (fastApiRes.status === 'rejected' && csClips.length === 0) {
+    throw fastApiRes.reason;
+  }
+
+  return [...csClips, ...fastClips];
 }
 
 export async function getClip(clipId: string): Promise<Clip> {
@@ -30,14 +60,24 @@ export async function getClip(clipId: string): Promise<Clip> {
     }
     return structuredClone(clip);
   }
+  if (isChatSpikeEntityId(clipId)) {
+    const lib = await getChatSpikeLibrary();
+    const clip = lib.clips.find((c) => c.id === clipId);
+    if (!clip) {
+      throw new ApiClientError({
+        message: `ChatSpike clip ${clipId} not found.`,
+        code: 'NOT_FOUND',
+        status: 404,
+      });
+    }
+    return clip;
+  }
   return apiRequest<Clip>(`/api/clips/${encodeURIComponent(clipId)}`);
 }
 
 export function getClipPreviewUrl(clip: Clip): string | null {
   if (clip.previewVideoUrl) {
-    return clip.previewVideoUrl.startsWith('http')
-      ? clip.previewVideoUrl
-      : buildApiUrl(clip.previewVideoUrl);
+    return resolveClipAssetUrl(clip.previewVideoUrl);
   }
   if (isMockApiEnabled()) {
     return null; // Mock mode explicitly has no fake video streams
@@ -47,9 +87,7 @@ export function getClipPreviewUrl(clip: Clip): string | null {
 
 export function getClipDownloadUrl(clip: Clip): string | null {
   if (clip.downloadUrl) {
-    return clip.downloadUrl.startsWith('http')
-      ? clip.downloadUrl
-      : buildApiUrl(clip.downloadUrl);
+    return resolveClipAssetUrl(clip.downloadUrl);
   }
   if (isMockApiEnabled()) {
     return null;
@@ -84,6 +122,9 @@ export async function updateClip(
     };
     mockApiState.clips[index] = updated;
     return structuredClone(updated);
+  }
+  if (isChatSpikeEntityId(clipId)) {
+    return updateChatSpikeLibraryClip(clipId, payload);
   }
 
   return apiRequest<Clip>(`/api/clips/${encodeURIComponent(clipId)}`, {
@@ -120,6 +161,9 @@ export async function renderClip(
     mockApiState.clips[index] = updated;
     return structuredClone(updated);
   }
+  if (isChatSpikeEntityId(clipId)) {
+    return renderChatSpikeLibraryClip(clipId, payload);
+  }
 
   return apiRequest<Clip>(`/api/clips/${encodeURIComponent(clipId)}/render`, {
     method: 'POST',
@@ -131,6 +175,10 @@ export async function deleteClip(clipId: string): Promise<void> {
   if (isMockApiEnabled()) {
     await simulateMockLatency();
     mockApiState.clips = mockApiState.clips.filter((c) => c.id !== clipId);
+    return;
+  }
+  if (isChatSpikeEntityId(clipId)) {
+    await deleteChatSpikeLibraryClip(clipId);
     return;
   }
   await apiRequest<void>(`/api/clips/${encodeURIComponent(clipId)}`, {
@@ -149,6 +197,12 @@ export async function batchExportClips(
       message:
         'Mock Adapter active: actual MP4/SRT/VTT archives require the Python FastAPI backend.',
     };
+  }
+  if (
+    payload.clipIds.length > 0 &&
+    payload.clipIds.every((id) => isChatSpikeEntityId(id))
+  ) {
+    return batchExportChatSpikeClips(payload);
   }
   return apiRequest<BatchExportResponse>('/api/clips/batch-export', {
     method: 'POST',

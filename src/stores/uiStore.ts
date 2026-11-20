@@ -2,7 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { setRuntimeMockMode } from '../api/client';
 import { ENV } from '../config/env';
+import type { AspectRatio } from '../types/project';
 import type { NotificationItem } from '../types/system';
+import { normalizeSmartFramingAspectRatio } from '../components/dashboard/dashboardWidgetUtils';
 import { normalizeThemePreference, type ThemePreference } from '../utils/theme';
 
 export interface ToastItem {
@@ -20,6 +22,7 @@ interface UiState {
   projectViewMode: 'grid' | 'list';
   mockModeEnabled: boolean;
   themeMode: ThemePreference;
+  smartFramingAspectRatio: AspectRatio;
   toasts: ToastItem[];
   notifications: NotificationItem[];
   toggleSidebar: () => void;
@@ -28,6 +31,7 @@ interface UiState {
   setProjectViewMode: (mode: 'grid' | 'list') => void;
   setMockModeEnabled: (enabled: boolean) => void;
   setThemeMode: (theme: ThemePreference) => void;
+  setSmartFramingAspectRatio: (ratio: AspectRatio) => void;
   addToast: (toast: Omit<ToastItem, 'id'>) => void;
   dismissToast: (id: string) => void;
   addNotification: (notification: Omit<NotificationItem, 'id' | 'createdAt' | 'read'>) => void;
@@ -47,6 +51,7 @@ export const useUiStore = create<UiState>()(
           typeof window !== 'undefined' &&
           new URLSearchParams(window.location.search).get('mock') === '1'),
       themeMode: 'dark',
+      smartFramingAspectRatio: '9:16',
       toasts: [],
       notifications: [],
 
@@ -66,6 +71,9 @@ export const useUiStore = create<UiState>()(
 
       setThemeMode: (themeMode) =>
         set({ themeMode: normalizeThemePreference(themeMode) }),
+
+      setSmartFramingAspectRatio: (ratio) =>
+        set({ smartFramingAspectRatio: normalizeSmartFramingAspectRatio(ratio) }),
 
       addToast: (toast) => {
         const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -110,6 +118,7 @@ export const useUiStore = create<UiState>()(
         sidebarCollapsed: state.sidebarCollapsed,
         projectViewMode: state.projectViewMode,
         themeMode: normalizeThemePreference(state.themeMode),
+        smartFramingAspectRatio: normalizeSmartFramingAspectRatio(state.smartFramingAspectRatio),
       }),
       merge: (persistedState, currentState) => {
         const persisted = (persistedState as Partial<UiState> | undefined) ?? {};
@@ -117,6 +126,9 @@ export const useUiStore = create<UiState>()(
           ...currentState,
           ...persisted,
           themeMode: normalizeThemePreference(persisted.themeMode),
+          smartFramingAspectRatio: normalizeSmartFramingAspectRatio(
+            persisted.smartFramingAspectRatio
+          ),
         };
       },
     }

@@ -14,9 +14,11 @@ import {
 } from 'lucide-react';
 import { BrandHeader } from '../components/brand/BrandHeader';
 import { DashboardWidget } from '../components/dashboard/DashboardWidget';
+import { ProcessingQueueWidget } from '../components/dashboard/ProcessingQueueWidget';
 import { QuickImportButton } from '../components/dashboard/QuickImportButton';
 import { QuickStartCarousel } from '../components/dashboard/QuickStartCarousel';
 import { RecentClipsStrip } from '../components/dashboard/RecentClipsStrip';
+import { SmartFramingToggle } from '../components/dashboard/SmartFramingToggle';
 import { PullToRefresh } from '../components/mobile/PullToRefresh';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -25,6 +27,7 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { StatusIndicator } from '../components/ui/StatusIndicator';
 import { BRAND } from '../config/brand';
 import {
+  useActiveJobsQuery,
   useAllClipsQuery,
   useCancelJobMutation,
   useProjectsQuery,
@@ -54,6 +57,10 @@ export function MobileDashboardPage() {
 
   const projects = projectsQuery.data ?? [];
   const clips = clipsQuery.data ?? [];
+  const activeJobsQueries = useActiveJobsQuery(projects);
+  const activeJobs = activeJobsQueries
+    .map((q) => q.data)
+    .filter((job): job is NonNullable<typeof job> => Boolean(job));
 
   const completedProjects = projects.filter((p) => p.status === 'completed');
   const activeProjects = projects.filter(
@@ -103,6 +110,8 @@ export function MobileDashboardPage() {
           <p className="text-xs text-ios-secondary leading-snug">
             {BRAND.productTagline}
           </p>
+
+          <SmartFramingToggle compact />
 
           {/* Prioritized Primary Create Action & Quick Import */}
           <div className="grid grid-cols-1 gap-2.5 pt-0.5">
@@ -255,6 +264,16 @@ export function MobileDashboardPage() {
           )}
         </div>
       </section>
+
+      {/* Compact Processing Queue Widget */}
+      <ProcessingQueueWidget
+        compact
+        projects={projects}
+        clips={clips}
+        activeJobs={activeJobs}
+        isLoading={projectsQuery.isLoading || clipsQuery.isLoading}
+        isError={projectsQuery.isError}
+      />
 
       {/* Compact Recharts Activity Breakdown */}
       <DashboardWidget

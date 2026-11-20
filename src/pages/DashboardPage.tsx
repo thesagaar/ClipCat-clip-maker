@@ -15,9 +15,11 @@ import {
 import { MascotAssistant } from '../components/brand/MascotAssistant';
 import { SdpLogo } from '../components/brand/SdpLogo';
 import { DashboardWidget } from '../components/dashboard/DashboardWidget';
+import { ProcessingQueueWidget } from '../components/dashboard/ProcessingQueueWidget';
 import { QuickImportButton } from '../components/dashboard/QuickImportButton';
 import { QuickStartCarousel } from '../components/dashboard/QuickStartCarousel';
 import { RecentClipsStrip } from '../components/dashboard/RecentClipsStrip';
+import { SmartFramingToggle } from '../components/dashboard/SmartFramingToggle';
 import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -27,6 +29,7 @@ import { StatusIndicator } from '../components/ui/StatusIndicator';
 import { BRAND } from '../config/brand';
 import { MobileDashboardPage } from './MobileDashboardPage';
 import {
+  useActiveJobsQuery,
   useAllClipsQuery,
   useCancelJobMutation,
   useProjectsQuery,
@@ -61,6 +64,10 @@ export function DashboardPage() {
 
   const projects = projectsQuery.data ?? [];
   const clips = clipsQuery.data ?? [];
+  const activeJobsQueries = useActiveJobsQuery(projects);
+  const activeJobs = activeJobsQueries
+    .map((q) => q.data)
+    .filter((job): job is NonNullable<typeof job> => Boolean(job));
 
   const completedProjects = projects.filter((p) => p.status === 'completed');
   const activeProjects = projects.filter(
@@ -132,18 +139,21 @@ export function DashboardPage() {
             <span>{BRAND.welcomeAttribution}</span>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <QuickImportButton variant="secondary" size="lg" className="w-full sm:w-auto" />
-          <Link to="/projects/new" className="w-full sm:w-auto">
-            <Button
-              variant="accent-purple"
-              size="lg"
-              className="w-full sm:w-auto"
-              icon={<Plus className="w-4 h-4" />}
-            >
-              Create New Project
-            </Button>
-          </Link>
+        <div className="flex flex-col sm:items-end gap-3.5 shrink-0">
+          <SmartFramingToggle />
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto sm:justify-end">
+            <QuickImportButton variant="secondary" size="lg" className="w-full sm:w-auto" />
+            <Link to="/projects/new" className="w-full sm:w-auto">
+              <Button
+                variant="accent-purple"
+                size="lg"
+                className="w-full sm:w-auto"
+                icon={<Plus className="w-4 h-4" />}
+              >
+                Create New Project
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -219,6 +229,15 @@ export function DashboardPage() {
           )}
         </div>
       </section>
+
+      {/* Processing Queue Progress Widget */}
+      <ProcessingQueueWidget
+        projects={projects}
+        clips={clips}
+        activeJobs={activeJobs}
+        isLoading={projectsQuery.isLoading || clipsQuery.isLoading}
+        isError={projectsQuery.isError}
+      />
 
       {/* Studio Activity Chart Widget (Clips Generated vs Processed Videos) */}
       <DashboardWidget

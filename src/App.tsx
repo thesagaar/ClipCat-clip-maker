@@ -19,6 +19,9 @@ const NewProjectPage = lazy(() =>
 const ProjectsPage = lazy(() =>
   import('./pages/ProjectsPage').then((m) => ({ default: m.ProjectsPage }))
 );
+const ChatSpikePage = lazy(() =>
+  import('./pages/ChatSpikePage').then((m) => ({ default: m.ChatSpikePage }))
+);
 const ProcessingPage = lazy(() =>
   import('./pages/ProcessingPage').then((m) => ({ default: m.ProcessingPage }))
 );
@@ -97,6 +100,7 @@ export default function App() {
               <Route element={<AppShell />}>
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/projects/new" element={<NewProjectPage />} />
+                <Route path="/chatspike" element={<ChatSpikePage />} />
                 <Route path="/projects" element={<ProjectsPage />} />
                 <Route path="/projects/:id/processing" element={<ProcessingPage />} />
                 <Route path="/projects/:id/clips" element={<ClipDiscoveryPage />} />

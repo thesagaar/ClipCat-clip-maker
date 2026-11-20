@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Download,
   Film,
+  Flame,
   FolderKanban,
   HardDrive,
   LayoutDashboard,
@@ -47,6 +48,7 @@ interface NavItem {
 const workspaceNav: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, end: true },
   { to: '/projects/new', label: 'New Project', icon: <PlusSquare className="w-4 h-4" /> },
+  { to: '/chatspike', label: 'ChatSpike', icon: <Flame className="w-4 h-4" /> },
   { to: '/projects', label: 'Projects', icon: <FolderKanban className="w-4 h-4" />, end: true },
   { to: '/clips', label: 'Clip Library', icon: <Film className="w-4 h-4" />, end: true },
   { to: '/exports', label: 'Exports', icon: <Download className="w-4 h-4" /> },

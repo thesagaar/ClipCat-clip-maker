@@ -7,6 +7,10 @@ import type {
   StartProcessingResponse,
 } from '../types/project';
 import type { Transcript } from '../types/transcript';
+import {
+  getChatSpikeLibrary,
+  isChatSpikeEntityId,
+} from './chatspike';
 import { apiRequest, apiUpload, isMockApiEnabled } from './client';
 import { ApiClientError } from './errors';
 import { mockApiState, simulateMockLatency } from './mockAdapter';
@@ -16,7 +20,19 @@ export async function listProjects(): Promise<Project[]> {
     await simulateMockLatency();
     return structuredClone(mockApiState.projects);
   }
-  return apiRequest<Project[]>('/api/projects');
+  const [fastApiRes, chatSpikeRes] = await Promise.allSettled([
+    apiRequest<Project[]>('/api/projects'),
+    getChatSpikeLibrary(),
+  ]);
+
+  const fastProjects = fastApiRes.status === 'fulfilled' ? fastApiRes.value : [];
+  const csProjects = chatSpikeRes.status === 'fulfilled' ? chatSpikeRes.value.projects : [];
+
+  if (fastApiRes.status === 'rejected' && csProjects.length === 0) {
+    throw fastApiRes.reason;
+  }
+
+  return [...csProjects, ...fastProjects];
 }
 
 export async function getProject(projectId: string): Promise<Project> {
@@ -31,6 +47,18 @@ export async function getProject(projectId: string): Promise<Project> {
       });
     }
     return structuredClone(found);
+  }
+  if (isChatSpikeEntityId(projectId)) {
+    const lib = await getChatSpikeLibrary();
+    const found = lib.projects.find((p) => p.id === projectId);
+    if (!found) {
+      throw new ApiClientError({
+        message: `ChatSpike project ${projectId} not found`,
+        code: 'NOT_FOUND',
+        status: 404,
+      });
+    }
+    return found;
   }
   return apiRequest<Project>(`/api/projects/${encodeURIComponent(projectId)}`);
 }
@@ -253,6 +281,10 @@ export async function getProjectClips(projectId: string): Promise<Clip[]> {
   if (isMockApiEnabled()) {
     await simulateMockLatency();
     return structuredClone(mockApiState.clips.filter((c) => c.projectId === projectId));
+  }
+  if (isChatSpikeEntityId(projectId)) {
+    const lib = await getChatSpikeLibrary();
+    return lib.clips.filter((c) => c.projectId === projectId);
   }
   return apiRequest<Clip[]>(`/api/projects/${encodeURIComponent(projectId)}/clips`);
 }
